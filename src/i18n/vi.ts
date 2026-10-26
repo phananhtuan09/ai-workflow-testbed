@@ -17,6 +17,7 @@ export const vi: Record<MessageKey, string> = {
   'orders.price': 'Giá',
   'orders.discount': 'Giảm giá (%)',
   'orders.total': 'Thành tiền',
+  'orders.savings': 'Tiết kiệm',
   'orders.status': 'Trạng thái',
   'orders.createdAt': 'Ngày tạo',
   'orders.status.draft': 'Nháp',
