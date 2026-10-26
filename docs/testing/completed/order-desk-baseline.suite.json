@@ -1,0 +1,75 @@
+{
+  "plan": "docs/testing/completed/order-desk-baseline.md",
+  "files": [
+    "e2e/runtime/order-desk-baseline.spec.ts",
+    "e2e/runtime/helpers.ts",
+    "e2e/fixtures.ts",
+    "shared/types.ts",
+    "playwright.config.ts",
+    "package.json",
+    "package-lock.json"
+  ],
+  "command": ["npx", "--no-install", "playwright", "test", "e2e/runtime/order-desk-baseline.spec.ts", "--project=desktop"],
+  "environment": "isolated-local: Playwright webServer npm run dev, DATA_DIR=.data/e2e, TEST_MODE=1, FIXED_NOW=2026-02-01T08:00:00.000Z, Chromium desktop",
+  "revision": "ai-workflow-testbed@main; dirty-tree identity recorded in approved file hashes",
+  "cases": [
+    {
+      "id": "E2E-01",
+      "kind": "browser",
+      "checks": [
+        {"id": "rendered_names", "expected": "[\"Monitor arm\", \"Standing desk\"]", "source": "rendered DOM on /orders"},
+        {"id": "api_owner_ids", "expected": "[2, 2]", "source": "GET /api/orders"},
+        {"id": "owner_column_hidden", "expected": "0 Owner column headers", "source": "rendered DOM on /orders"}
+      ]
+    },
+    {
+      "id": "E2E-02",
+      "kind": "browser",
+      "checks": [
+        {"id": "create_status", "expected": "201", "source": "POST /api/orders response"},
+        {"id": "rendered_total_after_reload", "expected": "$25.50", "source": "rendered DOM on /orders/{id} after reload"},
+        {"id": "persisted_order", "expected": "Desk lamp, 2550 cents, 0%, owner 2, draft", "source": "GET /api/orders/{id}"},
+        {"id": "order_count_delta", "expected": "1", "source": "GET /api/orders before and after"}
+      ]
+    },
+    {
+      "id": "E2E-03",
+      "kind": "api",
+      "checks": [
+        {"id": "status", "expected": "403", "source": "POST /api/orders response"},
+        {"id": "error", "expected": "errors.discountAdminOnly", "source": "POST /api/orders response body"},
+        {"id": "order_count_unchanged", "expected": "same count as baseline", "source": "GET /api/orders before and after"}
+      ]
+    },
+    {
+      "id": "E2E-04",
+      "kind": "api",
+      "checks": [
+        {"id": "read_status", "expected": "404", "source": "GET /api/orders/1 as bob"},
+        {"id": "edit_status", "expected": "404", "source": "PUT /api/orders/2 as bob"},
+        {"id": "order_unchanged", "expected": "name and price equal to captured baseline", "source": "GET /api/orders/2 as admin before and after"}
+      ]
+    },
+    {
+      "id": "E2E-05",
+      "kind": "browser",
+      "checks": [
+        {"id": "confirm_status", "expected": "200", "source": "POST /api/orders/2/confirm response"},
+        {"id": "rendered_status_after_reload", "expected": "Confirmed", "source": "rendered DOM on /orders/2 after reload"},
+        {"id": "edit_link_hidden", "expected": "0 Edit links", "source": "rendered DOM on /orders/2 after reload"},
+        {"id": "persisted_status", "expected": "confirmed", "source": "GET /api/orders/2"},
+        {"id": "edit_rejected", "expected": "409", "source": "PUT /api/orders/2 response"}
+      ]
+    },
+    {
+      "id": "E2E-06",
+      "kind": "api",
+      "checks": [
+        {"id": "too_long_status", "expected": "400", "source": "POST /api/orders (101 chars) response"},
+        {"id": "too_long_error", "expected": "validation.nameTooLong", "source": "POST /api/orders (101 chars) response body"},
+        {"id": "at_limit_status", "expected": "201", "source": "POST /api/orders (100 chars) response"},
+        {"id": "at_limit_persisted_length", "expected": "100", "source": "GET /api/orders/{id}"}
+      ]
+    }
+  ]
+}
