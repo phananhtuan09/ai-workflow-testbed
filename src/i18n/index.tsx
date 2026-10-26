@@ -10,7 +10,7 @@ const STORAGE_KEY = 'order-desk.locale';
 interface I18nValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: (key: string, values?: Record<string, string | number>) => string;
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
@@ -39,7 +39,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     () => ({
       locale,
       setLocale,
-      t: (key) => dictionaries[locale][key as MessageKey] ?? dictionaries[locale]['errors.unknown'],
+      t: (key, values) => {
+        const message = dictionaries[locale][key as MessageKey] ?? dictionaries[locale]['errors.unknown'];
+        return values ? message.replace(/\{(\w+)\}/g, (match, name: string) => String(values[name] ?? match)) : message;
+      },
     }),
     [locale, setLocale],
   );
