@@ -7,6 +7,7 @@
       "claude"
     ],
     "skills": [
+      "review-pr",
       "runtime-e2e-test"
     ]
   },
@@ -18,6 +19,7 @@
     "claude"
   ],
   "skills": [
+    "review-pr",
     "runtime-e2e-test"
   ],
   "files": [
@@ -25,6 +27,11 @@
       "scope": "claude-global",
       "path": "CLAUDE.md",
       "hash": "sha256:3898d5a3f80005fb40c8f484d6e97451324f2ad238d5965403a703b92aad0fe4"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/agents/review-pr.md",
+      "hash": "sha256:d57f87a457a1e3be7f0558eca1f203d6a271c03411642f8144c917fd14bdba9d"
     },
     {
       "scope": "repository",
@@ -55,6 +62,16 @@
       "scope": "repository",
       "path": ".claude/settings.json",
       "hash": "sha256:b8fd2c9c7663406ff7ba0639d0144448f2ced4fc8a706a99a22153b7fd435523"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/review-pr/agents/openai.yaml",
+      "hash": "sha256:686bbe8489bd710e9641172f8239712b639b7df29d4e4dc0966f21729d10f895"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/review-pr/SKILL.md",
+      "hash": "sha256:228e043c8bc83ace76eac9f40e8a44623c1337904d2c334c2a97f6f4b840bc6e"
     },
     {
       "scope": "repository",
