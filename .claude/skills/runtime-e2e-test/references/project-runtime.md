@@ -105,7 +105,7 @@ Before a run, make sure ports 5173 and 3001 are free and run with `CI=1` so Play
 
 - Project root: repository root.
 - Test/config/helper locations: `e2e/` (shared fixtures in `e2e/fixtures.ts`); runtime plan specs in `e2e/runtime/`.
-- Dependency/browser installation: `npm ci` and `npx playwright install chromium` (human-approved; never implicit).
+- Dependency/browser installation: in Claude Code cloud sessions the SessionStart hook (`.claude/hooks/session-start.sh`) runs `npm install` before the session starts, and Chromium for Playwright is preinstalled (`PLAYWRIGHT_BROWSERS_PATH`). Elsewhere, `npm ci` and `npx playwright install chromium` need human approval; never install implicitly.
 - Native execution command: `["npx", "--no-install", "playwright", "test", "<spec>", "--project=desktop"]`
 - Evidence attachment policy: traces on for browser cases (`test.use({ trace: 'on' })` in the spec); fixture data only.
 - Persistence proof: fresh `GET /api/orders/:id` after a page reload.
