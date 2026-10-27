@@ -114,6 +114,14 @@ Use the skill's suite contract and evidence tool described in `playwright-contra
 Launch a separate browser per invocation rather than attaching to a shared CDP session.
 Tests must emit structured checkpoint observations, not screenshot-only proof.
 
+## Base instance
+
+Used when a suite declares `base` to prove that new-behavior tests can fail.
+
+- Base environment: `WEB_PORT=5273`, `API_PORT=3101`, `DATA_DIR=.data/e2e-base` (the head run keeps 5173/3001 and `.data/e2e`).
+- Base setup: `["npm", "ci", "--prefer-offline", "--no-audit", "--no-fund"]` in the base worktree.
+- Base start limitations: NONE; Playwright's `webServer` starts the base app from the worktree with the base environment.
+
 ## Parallel execution
 
 - Isolation: serialized; one worker, one `DATA_DIR`.
