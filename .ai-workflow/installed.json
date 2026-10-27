@@ -76,7 +76,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/references/playwright-contract.md",
-      "hash": "sha256:73280a5eb754ec95e60015cfa9ce8ffa1ed7f8ded0e8069452ce6879e7190d41"
+      "hash": "sha256:836d96a76e78118a7f275db8fc8aeac797688e52b56b335ee2e9ae5fff0f7819"
     },
     {
       "scope": "repository",
@@ -86,12 +86,12 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/scripts/evidence.py",
-      "hash": "sha256:e4558c41478819526781ac6d2ae93c96ae10f70f4f176a882d6d4da529b75e5b"
+      "hash": "sha256:5182f7e8c4f941d30211caca8c5b9cc1f269f3af314bd25c2e71b957d6c7737d"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/SKILL.md",
-      "hash": "sha256:9185a31835c8394d5357e897842b64ec223820442de7ccbae4eb881b41a44764"
+      "hash": "sha256:1e1447e31003313f9f1e812f4943a1282ba891dd5437f966f802c409f83d6efc"
     },
     {
       "scope": "repository",
