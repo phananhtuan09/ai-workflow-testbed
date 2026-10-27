@@ -105,7 +105,7 @@ Before a run, make sure ports 5173 and 3001 are free and run with `CI=1` so Play
 
 - Project root: repository root.
 - Test/config/helper locations: `e2e/` (shared fixtures in `e2e/fixtures.ts`); runtime plan specs in `e2e/runtime/`.
-- Dependency/browser installation: `npm ci` and `npx playwright install chromium` (human-approved; never implicit).
+- Dependency/browser installation: in Claude Code cloud sessions the SessionStart hook (`.claude/hooks/session-start.sh`) runs `npm install` before the session starts, and Chromium for Playwright is preinstalled (`PLAYWRIGHT_BROWSERS_PATH`). Elsewhere, `npm ci` and `npx playwright install chromium` need human approval; never install implicitly.
 - Native execution command: `["npx", "--no-install", "playwright", "test", "<spec>", "--project=desktop"]`
 - Evidence attachment policy: traces on for browser cases (`test.use({ trace: 'on' })` in the spec); fixture data only.
 - Persistence proof: fresh `GET /api/orders/:id` after a page reload.
@@ -113,6 +113,14 @@ Before a run, make sure ports 5173 and 3001 are free and run with `CI=1` so Play
 Use the skill's suite contract and evidence tool described in `playwright-contract.md`.
 Launch a separate browser per invocation rather than attaching to a shared CDP session.
 Tests must emit structured checkpoint observations, not screenshot-only proof.
+
+## Base instance
+
+Used when a suite declares `base` to prove that new-behavior tests can fail.
+
+- Base environment: `WEB_PORT=5273`, `API_PORT=3101`, `DATA_DIR=.data/e2e-base` (the head run keeps 5173/3001 and `.data/e2e`).
+- Base setup: `["npm", "ci", "--prefer-offline", "--no-audit", "--no-fund"]` in the base worktree.
+- Base start limitations: NONE; Playwright's `webServer` starts the base app from the worktree with the base environment.
 
 ## Parallel execution
 
