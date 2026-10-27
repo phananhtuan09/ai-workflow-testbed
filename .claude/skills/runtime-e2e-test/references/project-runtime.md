@@ -122,6 +122,16 @@ Used when a suite declares `base` to prove that new-behavior tests can fail.
 - Base setup: `["npm", "ci", "--prefer-offline", "--no-audit", "--no-fund"]` in the base worktree.
 - Base start limitations: NONE; Playwright's `webServer` starts the base app from the worktree with the base environment.
 
+## Determinism
+
+Copied into a suite's `determinism` so base and head differ only in behavior.
+
+- Time freeze: `FIXED_NOW=2026-02-01T08:00:00.000Z` freezes the server clock (`server/clock.ts`). `playwright.config.ts` already defaults to this value; declare it in `determinism.env` so both instances use it explicitly.
+- Seed data: each instance starts from `server/seed.ts` in its own `DATA_DIR`; `POST /api/test/reset` (requires `TEST_MODE=1`) restores the same seed.
+- Randomness: NOT_SUPPORTED. Session IDs and password salts use `crypto.randomBytes`; they are not observed by API or UI checks.
+- Normalization rules: none needed for seeded or created orders; order IDs are sequential from the seed and timestamps come from `FIXED_NOW`. Add a rule only for a value that differs between two correct instances.
+- Determinism limits: session IDs and password salts are random; the browser clock is not frozen (the client only formats server timestamps).
+
 ## Parallel execution
 
 - Isolation: serialized; one worker, one `DATA_DIR`.
