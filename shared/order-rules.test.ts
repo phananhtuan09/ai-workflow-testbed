@@ -37,4 +37,9 @@ describe('orderTotalCents', () => {
     expect(orderTotalCents({ priceCents: 999, discountPercent: 15 })).toBe(849);
     expect(orderTotalCents({ priceCents: 2000, discountPercent: 0 })).toBe(2000);
   });
+
+  it('rounds half-cent totals to the nearest even cent', () => {
+    expect(orderTotalCents({ priceCents: 1, discountPercent: 50 })).toBe(0);
+    expect(orderTotalCents({ priceCents: 3, discountPercent: 50 })).toBe(2);
+  });
 });
