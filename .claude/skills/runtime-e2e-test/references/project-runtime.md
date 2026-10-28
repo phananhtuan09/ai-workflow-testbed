@@ -122,6 +122,17 @@ Used when a suite declares `base` to prove that new-behavior tests can fail.
 - Base setup: `["npm", "ci", "--prefer-offline", "--no-audit", "--no-fund"]` in the base worktree.
 - Base start limitations: NONE; Playwright's `webServer` starts the base app from the worktree with the base environment.
 
+## Existing test suites
+
+Copied into a suite's `existing`; each suite runs on base and head so new failures are told apart from earlier ones.
+
+| ID | Command (argument array) | Env | JUnit report |
+| --- | --- | --- | --- |
+| `unit` | `["npx", "--no-install", "vitest", "run", "--reporter=junit", "--outputFile={report}"]` | NONE | `--outputFile={report}` |
+| `e2e` | `["npx", "--no-install", "playwright", "test", "--project=desktop", "--reporter=junit"]` | `PLAYWRIGHT_JUNIT_OUTPUT_NAME={report}` | env `PLAYWRIGHT_JUNIT_OUTPUT_NAME` |
+
+- No suites: NOT_APPLICABLE; `unit` is `npm test` (Vitest), `e2e` is every spec under `e2e/` on the `desktop` project.
+
 ## Determinism
 
 Copied into a suite's `determinism` so base and head differ only in behavior.
