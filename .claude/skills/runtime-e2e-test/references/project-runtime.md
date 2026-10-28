@@ -5,7 +5,7 @@ skill, keep commands and paths current, and never store secret values here.
 
 - Status: READY
 - Maintainer: phananhtuan09
-- Last verified: 2026-10-26
+- Last verified: 2026-10-28
 - Applies to: Order Desk (`main`), Node 22, Playwright 1.63.0
 
 Use `Status: READY` only after the preflight commands and environment assumptions
@@ -132,6 +132,25 @@ Copied into a suite's `existing`; each suite runs on base and head so new failur
 | `e2e` | `["npx", "--no-install", "playwright", "test", "--project=desktop", "--reporter=junit"]` | `PLAYWRIGHT_JUNIT_OUTPUT_NAME={report}` | env `PLAYWRIGHT_JUNIT_OUTPUT_NAME` |
 
 - No suites: NOT_APPLICABLE; `unit` is `npm test` (Vitest), `e2e` is every spec under `e2e/` on the `desktop` project.
+- Smoke suite: `e2e`; existing suites run on every base comparison, so the smoke suite always runs.
+
+## Regression
+
+Copied into a suite's `regression`; `scripts/impact.py` walks the import graph from changed files back to these routes.
+
+- Sources: `["src", "shared"]`
+- Import aliases: NONE (`{}`); imports are relative.
+- Shared surfaces: `["src/styles/**", "src/i18n/**", "src/lib/api.ts", "src/lib/auth.tsx", "shared/**"]`
+- Fan-in threshold: `3`
+- Regression budget: `3`
+
+| Key route | Page file | URL to open in the sweep |
+| --- | --- | --- |
+| `/login` | `src/pages/LoginPage.tsx` | `/login` (logged out) |
+| `/orders` | `src/pages/OrdersPage.tsx` | `/orders` as `admin` |
+| `/orders/new` | `src/pages/OrderFormPage.tsx` | `/orders/new` as `admin` |
+| `/orders/:id` | `src/pages/OrderDetailPage.tsx` | `/orders/1` as `admin` with seed data |
+| `/orders/:id/edit` | `src/pages/OrderFormPage.tsx` | `/orders/1/edit` as `admin` with seed data |
 
 ## Determinism
 
