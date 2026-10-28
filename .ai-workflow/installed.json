@@ -91,12 +91,12 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/SKILL.md",
-      "hash": "sha256:1e1447e31003313f9f1e812f4943a1282ba891dd5437f966f802c409f83d6efc"
+      "hash": "sha256:369af9245e66f6630e398663c26f1088b82f5cb0831ab06a81c17bab9da97dea"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/validate_test_plan.py",
-      "hash": "sha256:07199cad61c9de41de94d55b26ef81ed6fd55bd7af65b0ddb1c9cc0e2a66ba8b"
+      "hash": "sha256:2d31636eb476717a4c498f57c213845ae0f36ce365e2213a297d60faa0efe143"
     },
     {
       "scope": "repository",
@@ -161,12 +161,12 @@
     {
       "scope": "repository",
       "path": "docs/testing/README.md",
-      "hash": "sha256:53cbbefecad7c74ed16c75fa66764dada3c81dd176f5831ce4ef549c77011f3e"
+      "hash": "sha256:fce3f979cbe725d88c13b326a6436718e65e165fcf5330f1526d5044eeaf42c2"
     },
     {
       "scope": "repository",
       "path": "docs/WORKFLOW.md",
-      "hash": "sha256:664d6b0e3994e835af0881fae0fe2758ed142544750367f8c09b359eeeebb0e3"
+      "hash": "sha256:601e100a04727ac9c6269b2b8da803005b6c057e0096193f101baf28fe337c1a"
     }
   ]
 }
