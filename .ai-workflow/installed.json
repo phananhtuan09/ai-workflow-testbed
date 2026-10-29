@@ -70,17 +70,17 @@
     {
       "scope": "repository",
       "path": ".claude/skills/quality-code-check/references/surface-rules.md",
-      "hash": "sha256:9cfc7c3f94fd32071e02572a43fb8076d11ea14a6252f397798de5fd758075c1"
+      "hash": "sha256:349ce22bba4bf624877bf64f4f7394558eac04e8736abe8f69fcec8bc1179ef3"
     },
     {
       "scope": "repository",
-      "path": ".claude/skills/quality-code-check/scripts/surface-scan.js",
-      "hash": "sha256:fb396055c8d66c37f074b0c365ff09c97b212ea09e16289094242c7f069ffd77"
+      "path": ".claude/skills/quality-code-check/scripts/surface-scan.cjs",
+      "hash": "sha256:b79c3bdc0d9167ab58b22f56ed48c6745faf3ec4ce5ec78d685efc2204e8170f"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/quality-code-check/SKILL.md",
-      "hash": "sha256:b2733cccd5ee7fe687e2a6fa40eb8f2dec82e5bdd81db80689c927b4511903b5"
+      "hash": "sha256:afe7f799a61c7c95f4f760281f81cc9faf9244342a57b56618cf48b154a55379"
     },
     {
       "scope": "repository",
@@ -145,7 +145,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/scripts/validate_change.py",
-      "hash": "sha256:36ad7029b99dc8e3cc83db5b24491ff7c59574ff5e96ff9fac1166f59d078505"
+      "hash": "sha256:9d07d6b2b2a70cbdfdfae8318071408c3752f02f25e11edfee4055309871e165"
     },
     {
       "scope": "repository",
