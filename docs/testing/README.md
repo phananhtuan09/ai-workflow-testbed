@@ -4,7 +4,7 @@ This optional namespace stores durable runtime end-to-end acceptance and regress
 
 ## Admission
 
-Create a plan here only when runtime verification has multiple cases, crosses UI/API/data or operational boundaries, spans sessions, needs fixtures or cleanup, contains release blockers, or must be auditable later. Use direct proof for bounded same-session work.
+Create a plan here only for durable runtime verification: the human asks to keep or re-run the tests or to use them for a release, the target is existing features with no change set, or the work spans sessions or must be auditable later. A light run that proves a change now keeps its plan and evidence outside this namespace; `evidence.py promote` moves a light run here when its tests should be kept.
 
 A plan is execution memory, not product authority. Derive expected behavior from the current request and approved product or decision sources.
 
@@ -26,6 +26,7 @@ Any change to approved inputs requires explicit reapproval.
 The Markdown ledger summarizes generated evidence; it does not replace native results.
 After a run, copy `Run ID` and the head and base commits into `Tested revisions` from the bundle's `run-manifest.json` files, and take `Last updated` from the clock when you write the ledger, never an estimate.
 Copy each case's `Actual path` from its recorded observations and judge `Path match` against that case's `Runtime path`. Copy the audit's `Audit:` line into the run summary.
+Copy each existing suite's generated status into `## Existing suites`; a `PRE_EXISTING` suite is reported as an earlier failure, not as a failure of the change.
 Copy each case's generated `Can-fail` value into the ledger; completion requires it on every PASS. A PASS whose `Can-fail` is `NON_PROVING` is counted under `Non-proving` in the run summary, not under `PASS`, and blocks completion.
 
 ```markdown
@@ -50,6 +51,10 @@ Copy each case's generated `Can-fail` value into the ledger; completion requires
 - NOT_RUN: 1
 - INVALIDATED: 0
 - Release-blocking PASS: 0/1
+
+## Existing suites
+
+- `<suite id>`: NOT_RUN — <generated status after the run, with the new, unstable, removed, and pre-existing tests>
 
 ## Supporting checks
 
@@ -101,6 +106,7 @@ change, and no unexpected runtime error is recorded.
 - Path match: `NOT_RUN`, `YES`, `NO`.
 - Human decision: `PENDING`, `ACCEPTED`, `REJECTED`.
 - Cleanup: `NOT_RUN`, `NOT_REQUIRED`, `COMPLETE`, `INCOMPLETE`.
+- Existing suite: `NOT_RUN`, `PASS`, `NEW_FAILURE`, `NEEDS_REVIEW`, `PRE_EXISTING`, `NOT_COMPARABLE`.
 
 ## Runtime proof rules
 
