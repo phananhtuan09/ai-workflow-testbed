@@ -145,12 +145,12 @@
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/scripts/validate_change.py",
-      "hash": "sha256:9d07d6b2b2a70cbdfdfae8318071408c3752f02f25e11edfee4055309871e165"
+      "hash": "sha256:5b7eaec49da8799275ff6670d7ca60c732d192e6406b3b9ff513195a73820b6c"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/SKILL.md",
-      "hash": "sha256:014d34f34cf4b0ad9a2d54bc9e3da955dc7e876c7777feed25bd88e304a27475"
+      "hash": "sha256:d80c05f1f45d5c76b748ce5c833974fc3ac2b20491cdc54c131a68a318895f1b"
     },
     {
       "scope": "repository",
