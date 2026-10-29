@@ -7,6 +7,10 @@ export function formatMoney(cents: number, locale: Locale): string {
 }
 
 export function formatDate(iso: string, locale: Locale): string {
+  return new Intl.DateTimeFormat(localeTags[locale], { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(new Date(iso));
+}
+
+export function formatFullDate(iso: string, locale: Locale): string {
   return new Intl.DateTimeFormat(localeTags[locale], { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(iso));
 }
 
