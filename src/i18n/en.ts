@@ -24,6 +24,8 @@ export const en = {
   'orders.confirm': 'Confirm order',
   'orders.deleteConfirm': 'Delete this order?',
   'orders.back': 'Back to orders',
+  'orders.copyLink': 'Copy link',
+  'orders.linkCopied': 'Link copied',
   'orders.discountAdminHint': 'Only admins can apply a discount.',
   'form.newTitle': 'New order',
   'form.editTitle': 'Edit order',

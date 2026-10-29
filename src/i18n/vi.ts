@@ -26,6 +26,7 @@ export const vi: Record<MessageKey, string> = {
   'orders.confirm': 'Xác nhận đơn',
   'orders.deleteConfirm': 'Xoá đơn hàng này?',
   'orders.back': 'Quay lại danh sách',
+  'orders.copyLink': 'Sao chép liên kết',
   'orders.discountAdminHint': 'Chỉ admin được áp dụng giảm giá.',
   'form.newTitle': 'Tạo đơn hàng',
   'form.editTitle': 'Sửa đơn hàng',
