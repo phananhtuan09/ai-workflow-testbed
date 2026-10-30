@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { orderTotalCents } from '../../shared/order-rules';
+import { NoteCount } from '../components/NoteCount';
 import { EmptyState, ErrorState, LoadingState } from '../components/StateView';
 import { useI18n } from '../i18n';
 import { api } from '../lib/api';
@@ -34,6 +35,7 @@ export function OrdersPage() {
                 <th className="table__number">{t('orders.total')}</th>
                 <th>{t('orders.status')}</th>
                 <th>{t('orders.createdAt')}</th>
+                <th className="table__number">{t('notes.column')}</th>
               </tr>
             </thead>
             <tbody>
@@ -48,6 +50,9 @@ export function OrdersPage() {
                     <span className={`badge badge--${order.status}`}>{t(`orders.status.${order.status}`)}</span>
                   </td>
                   <td>{formatDate(order.createdAt, locale)}</td>
+                  <td className="table__number">
+                    <NoteCount orderId={order.id} />
+                  </td>
                 </tr>
               ))}
             </tbody>

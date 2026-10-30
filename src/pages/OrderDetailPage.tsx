@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { orderTotalCents } from '../../shared/order-rules';
 import { Button } from '../components/Button';
+import { OrderNotes } from '../components/OrderNotes';
 import { ErrorState, LoadingState } from '../components/StateView';
 import { useI18n } from '../i18n';
 import { api } from '../lib/api';
@@ -87,6 +88,7 @@ export function OrderDetailPage() {
           </Button>
         )}
       </div>
+      <OrderNotes orderId={data.id} />
     </article>
   );
 }
