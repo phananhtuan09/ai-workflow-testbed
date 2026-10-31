@@ -168,18 +168,13 @@
     },
     {
       "scope": "repository",
-      "path": ".claude/skills/security-performance-check/scripts/__pycache__/check_findings.cpython-313.pyc",
-      "hash": "sha256:e34728e69d1ca48dea6df44d841d3620f94fdbdd34220e0e16ec7ae1eadd15f1"
-    },
-    {
-      "scope": "repository",
       "path": ".claude/skills/security-performance-check/scripts/check_findings.py",
       "hash": "sha256:5a61dda36ca7a5a2ee860c81f61cf9e6e05303f2af6435186807dae2b647df2f"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/security-performance-check/SKILL.md",
-      "hash": "sha256:e41ba6a44780eab244b52708817821ab7b7c524b9ce94892d022576a6ea5a828"
+      "hash": "sha256:b0249dc50cbabbf4815d5572706a810f836338471ffa78054ab19e3267f3fdb0"
     },
     {
       "scope": "repository",
