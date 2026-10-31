@@ -173,3 +173,14 @@ Copied into a suite's `determinism` so base and head differ only in behavior.
 Unknown isolation means serialize mutation runs.
 Browser contexts do not isolate database state or external side effects.
 Never reset a shared database or stop services owned by another run.
+
+## Security and performance probes
+
+Used by `security-performance-check` for local/dev runtime probes.
+Never put secret values here; name accounts and commands only.
+
+- Allowed hosts: `localhost` and `127.0.0.1` only (head on 5173/3001, base instance on 5273/3101); probes stop on any other host.
+- Test accounts per role: `alice` and `bob` (role `user`; in the seed alice owns orders 1 and 2, bob owns none until he creates one) and `admin` (role `admin`, owns order 3); passwords are in the README seed table.
+- Access-denied fingerprint: another user's order answers `404 {"error":"errors.notFound"}` so IDs do not leak; signed out answers `401 {"error":"errors.unauthenticated"}`; a role-restricted action answers `403 {"error":"errors.forbidden"}`.
+- Data reset command: `POST /api/test/reset` on the instance under test (requires `TEST_MODE=1`, answers 204), or `["npm", "run", "db:reset"]` with that instance's `DATA_DIR`.
+- Probe budget: 30 probe requests or flows per run; stop and report `probes not run: N` when exhausted.
