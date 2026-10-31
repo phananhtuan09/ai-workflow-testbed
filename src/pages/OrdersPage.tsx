@@ -16,7 +16,14 @@ export function OrdersPage() {
   return (
     <section>
       <div className="page-header">
-        <h1>{t('orders.title')}</h1>
+        <div className="page-header__title">
+          <h1>{t('orders.title')}</h1>
+          {orders.status === 'success' && (
+            <span className="page-header__count">
+              {t(orders.data.length === 1 ? 'orders.count.one' : 'orders.count.other', { count: orders.data.length })}
+            </span>
+          )}
+        </div>
         <Link to="/orders/new" className="button button--primary">
           {t('orders.new')}
         </Link>

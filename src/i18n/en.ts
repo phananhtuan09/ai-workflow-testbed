@@ -10,6 +10,8 @@ export const en = {
   'orders.title': 'Orders',
   'orders.new': 'New order',
   'orders.empty': 'No orders yet.',
+  'orders.count.one': '{count} order',
+  'orders.count.other': '{count} orders',
   'orders.name': 'Name',
   'orders.owner': 'Owner',
   'orders.price': 'Price',
