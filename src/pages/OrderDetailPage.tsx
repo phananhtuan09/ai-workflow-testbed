@@ -19,6 +19,7 @@ export function OrderDetailPage() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin';
+  const isOwner = order.status === 'success' && order.data.ownerId === user?.id;
 
   async function runAction(action: () => Promise<unknown>, after: () => void) {
     setBusy(true);
@@ -71,6 +72,19 @@ export function OrderDetailPage() {
         {isAdmin && data.status === 'draft' && (
           <Button disabled={busy} onClick={() => runAction(() => api.confirmOrder(data.id), order.reload)}>
             {t('orders.confirm')}
+          </Button>
+        )}
+        {data.status === 'draft' && (isAdmin || isOwner) && (
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => {
+              if (window.confirm(t('orders.cancelConfirm'))) {
+                void runAction(() => api.cancelOrder(data.id), order.reload);
+              }
+            }}
+          >
+            {t('orders.cancel')}
           </Button>
         )}
         {isAdmin && (

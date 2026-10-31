@@ -11,6 +11,7 @@ This repository is used to try [ai-agent-workflow](https://github.com/phananhtua
 - Create and edit orders with a name (max 100 characters), a price, and a discount (0–50%, admins only).
 - Order detail with total price; admins can confirm or delete an order.
   Confirmed orders can no longer be edited.
+- The owner or an admin can cancel a draft order; cancelled orders show a "Cancelled" badge.
 - English and Vietnamese UI; every UI string goes through `src/i18n/`.
 
 | Username | Password | Role |

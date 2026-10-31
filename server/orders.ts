@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { validateOrderInput } from '../shared/order-rules';
 import type { Order, OrderInput, OrderWithOwner } from '../shared/types';
 import { requireAuth, requireRole } from './auth';
+import { canCancel } from './order-policy';
 import { now } from './clock';
 import { getDb, saveDb } from './db';
 
@@ -49,7 +50,7 @@ function readInput(req: Request, res: Response): OrderInput | undefined {
 
 ordersRouter.get('/', (req, res) => {
   const orders = getDb()
-    .orders.filter((order) => canAccess(req, order))
+    .orders.filter((order) => canAccess(req, order) && (req.user!.role === 'admin' || order.status !== 'cancelled'))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   res.json(orders.map(withOwner));
 });
@@ -93,6 +94,18 @@ ordersRouter.post('/:id/confirm', requireRole('admin'), (req, res) => {
   const order = findAccessibleOrder(req, res);
   if (!order) return;
   order.status = 'confirmed';
+  saveDb();
+  res.json(withOwner(order));
+});
+
+ordersRouter.post('/:id/cancel', (req, res) => {
+  const order = findAccessibleOrder(req, res);
+  if (!order) return;
+  if (!canCancel(req.user!, order)) {
+    res.status(409).json({ error: 'errors.cancelNotAllowed' });
+    return;
+  }
+  order.status = 'cancelled';
   saveDb();
   res.json(withOwner(order));
 });
