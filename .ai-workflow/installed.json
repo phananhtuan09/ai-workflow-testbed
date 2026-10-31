@@ -8,8 +8,10 @@
     ],
     "skills": [
       "quality-code-check",
+      "record-workflow-friction",
       "review-pr",
       "runtime-e2e-test",
+      "security-performance-check",
       "validate-change"
     ]
   },
@@ -22,8 +24,10 @@
   ],
   "skills": [
     "quality-code-check",
+    "record-workflow-friction",
     "review-pr",
     "runtime-e2e-test",
+    "security-performance-check",
     "validate-change"
   ],
   "files": [
@@ -84,6 +88,16 @@
     },
     {
       "scope": "repository",
+      "path": ".claude/skills/record-workflow-friction/agents/openai.yaml",
+      "hash": "sha256:5a6570686e3d94fb74cbc1763446d341aa23401ee86ec40712978cc9fa4d9ecb"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/record-workflow-friction/SKILL.md",
+      "hash": "sha256:0f5ec7dcec941c711c4eedc976bdfc05c26321275eb111429ef74dce798ec036"
+    },
+    {
+      "scope": "repository",
       "path": ".claude/skills/review-pr/agents/openai.yaml",
       "hash": "sha256:686bbe8489bd710e9641172f8239712b639b7df29d4e4dc0966f21729d10f895"
     },
@@ -134,23 +148,58 @@
     },
     {
       "scope": "repository",
+      "path": ".claude/skills/security-performance-check/agents/openai.yaml",
+      "hash": "sha256:0c2efed03ddcbb52a2f09c7b3bf22552e3bcd42c912b0ad4430a847aa099bfad"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/security-performance-check/references/evidence-contract.md",
+      "hash": "sha256:e241486f0e93007b55c20bb76a1217620792fd1d43a2ffc92688388cff411776"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/security-performance-check/references/performance-signals.md",
+      "hash": "sha256:9d415d3d1dce4fef1a651e38938007aa54c7b812e7115a71a2781a7b3c4886e9"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/security-performance-check/references/security-signals.md",
+      "hash": "sha256:76c11f4a05dc52bd04395457ed916b1baf88a5f22977e0cba455e0399def3317"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/security-performance-check/scripts/__pycache__/check_findings.cpython-313.pyc",
+      "hash": "sha256:e34728e69d1ca48dea6df44d841d3620f94fdbdd34220e0e16ec7ae1eadd15f1"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/security-performance-check/scripts/check_findings.py",
+      "hash": "sha256:5a61dda36ca7a5a2ee860c81f61cf9e6e05303f2af6435186807dae2b647df2f"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/security-performance-check/SKILL.md",
+      "hash": "sha256:e41ba6a44780eab244b52708817821ab7b7c524b9ce94892d022576a6ea5a828"
+    },
+    {
+      "scope": "repository",
       "path": ".claude/skills/validate-change/agents/openai.yaml",
       "hash": "sha256:ea0a8f6cbea6efaeccd74e414323c96f8c0ebc54b50693d3c6dceb8268784aa8"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/references/risk-rules.md",
-      "hash": "sha256:f77881e475ba400a4a515f4be63e86938ab90d134494011e174439db87f86fd5"
+      "hash": "sha256:9951edd8ece4c65d0e3a9ad4c50e2778f42bc89f8867fdfb2396907891a3a925"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/scripts/validate_change.py",
-      "hash": "sha256:5b7eaec49da8799275ff6670d7ca60c732d192e6406b3b9ff513195a73820b6c"
+      "hash": "sha256:9c0e918a2d0ef44217621887e37b6aeecd021ebbbe81f37fc6ee0478e37b82b8"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/SKILL.md",
-      "hash": "sha256:d53445806202a36a17bc832e09ccb1ad092d5e58a95e901d2ecf767e204d9bc8"
+      "hash": "sha256:ec7d332a708be6a13c33189377ddce522c52feaaa96830336b2f10ec2150dfa3"
     },
     {
       "scope": "repository",
