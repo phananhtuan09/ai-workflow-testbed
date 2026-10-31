@@ -1,4 +1,4 @@
-import type { ApiErrorBody, OrderInput, OrderWithOwner, User } from '../../shared/types';
+import type { ApiErrorBody, OrderInput, OrderItem, OrderSummaryWithOwner, OrderWithOwner, User } from '../../shared/types';
 
 export class ApiError extends Error {
   constructor(
@@ -31,7 +31,7 @@ export const api = {
     request<User>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   logout: () => request<void>('/auth/logout', { method: 'POST' }),
   me: () => request<User>('/auth/me'),
-  listOrders: () => request<OrderWithOwner[]>('/orders'),
+  listOrders: () => request<OrderSummaryWithOwner[]>('/orders'),
   getOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}`),
   createOrder: (input: OrderInput) =>
     request<OrderWithOwner>('/orders', { method: 'POST', body: JSON.stringify(input) }),
@@ -39,4 +39,7 @@ export const api = {
     request<OrderWithOwner>(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
   confirmOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}/confirm`, { method: 'POST' }),
   deleteOrder: (id: number) => request<void>(`/orders/${id}`, { method: 'DELETE' }),
+  listItems: (id: number) => request<OrderItem[]>(`/orders/${id}/items`),
+  updateItemQuantity: (id: number, itemId: number, quantity: number) =>
+    request<OrderWithOwner>(`/orders/${id}/items/${itemId}`, { method: 'PATCH', body: JSON.stringify({ quantity }) }),
 };

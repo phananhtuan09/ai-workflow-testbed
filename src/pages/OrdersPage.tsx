@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { orderTotalCents } from '../../shared/order-rules';
+import { ItemCount } from '../components/ItemCount';
 import { EmptyState, ErrorState, LoadingState } from '../components/StateView';
 import { useI18n } from '../i18n';
 import { api } from '../lib/api';
@@ -31,6 +32,7 @@ export function OrdersPage() {
               <tr>
                 <th>{t('orders.name')}</th>
                 {isAdmin && <th>{t('orders.owner')}</th>}
+                <th className="table__number">{t('orders.items')}</th>
                 <th className="table__number">{t('orders.total')}</th>
                 <th>{t('orders.status')}</th>
                 <th>{t('orders.createdAt')}</th>
@@ -43,6 +45,9 @@ export function OrdersPage() {
                     <Link to={`/orders/${order.id}`}>{order.name}</Link>
                   </td>
                   {isAdmin && <td>{order.ownerName}</td>}
+                  <td className="table__number">
+                    <ItemCount orderId={order.id} />
+                  </td>
                   <td className="table__number">{formatMoney(orderTotalCents(order), locale)}</td>
                   <td>
                     <span className={`badge badge--${order.status}`}>{t(`orders.status.${order.status}`)}</span>

@@ -8,7 +8,8 @@ This repository is used to try [ai-agent-workflow](https://github.com/phananhtua
 - Sign in with one of three seeded accounts; sessions use an HTTP-only cookie.
 - Orders list with loading, empty, and error states.
   Users see only their own orders; admins see every order and its owner.
-- Create and edit orders with a name (max 100 characters), a price, and a discount (0–50%, admins only).
+- Create and edit orders with a name (max 100 characters), 1–20 lines (product, quantity, unit price), and a discount (0–50%, admins only).
+  Owners and admins change a line's quantity from the detail page while the order is a draft.
 - Order detail with total price; admins can confirm or delete an order.
   Confirmed orders can no longer be edited.
 - English and Vietnamese UI; every UI string goes through `src/i18n/`.
