@@ -243,3 +243,9 @@ h1 {
 .state--error {
   color: var(--color-danger);
 }
+
+.actions__note {
+  align-self: center;
+  color: var(--color-success);
+  font-size: 0.875rem;
+}
