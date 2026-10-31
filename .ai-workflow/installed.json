@@ -104,7 +104,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/review-pr/SKILL.md",
-      "hash": "sha256:b3d77a5ce97a8d0835d31b61734272b0b525f53ac29a61142587f8603dd6138e"
+      "hash": "sha256:30ffcaf0b16ff1db5ad879d659d71ad0b2237f8e62fd2ec74beb82156489962a"
     },
     {
       "scope": "repository",
@@ -189,12 +189,12 @@
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/scripts/validate_change.py",
-      "hash": "sha256:9c0e918a2d0ef44217621887e37b6aeecd021ebbbe81f37fc6ee0478e37b82b8"
+      "hash": "sha256:6056beea1356b096b3a674602fcbe6a4587e17e7374607bdcbdca61bdb14b42e"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/SKILL.md",
-      "hash": "sha256:ec7d332a708be6a13c33189377ddce522c52feaaa96830336b2f10ec2150dfa3"
+      "hash": "sha256:7f4f1c9eced41f6c928e921ff0f0ac32f46cf31cefec846d34fe39b42f44e52d"
     },
     {
       "scope": "repository",
