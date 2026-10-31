@@ -13,7 +13,9 @@ function load(): Database {
     persist(seeded);
     return seeded;
   }
-  return JSON.parse(fs.readFileSync(dbFile, 'utf8')) as Database;
+  // Databases created before notes existed have no notes fields yet.
+  const stored = JSON.parse(fs.readFileSync(dbFile, 'utf8')) as Partial<Database>;
+  return { nextNoteId: 1, notes: [], ...stored } as Database;
 }
 
 function persist(data: Database): void {
