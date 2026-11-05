@@ -25,6 +25,10 @@ export const en = {
   'orders.deleteConfirm': 'Delete this order?',
   'orders.back': 'Back to orders',
   'orders.discountAdminHint': 'Only admins can apply a discount.',
+  'orders.accounting': 'Accounting',
+  'orders.accounting.sent': 'Sent to accounting',
+  'orders.accounting.failed': 'Not sent to accounting',
+  'orders.accounting.resend': 'Resend',
   'form.newTitle': 'New order',
   'form.editTitle': 'Edit order',
   'form.save': 'Save',
@@ -44,6 +48,7 @@ export const en = {
   'errors.validation': 'Please fix the highlighted fields.',
   'errors.discountAdminOnly': 'Only admins can apply a discount.',
   'errors.orderLocked': 'Confirmed orders cannot be edited.',
+  'errors.accountingNotPending': 'This order has nothing to resend.',
   'errors.network': 'Cannot reach the server.',
   'errors.unknown': 'Something went wrong.',
 } as const;
