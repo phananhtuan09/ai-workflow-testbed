@@ -20,7 +20,7 @@ Choose the mode first. Both modes plan and run the same way, with the same evide
 An explicit human instruction ("keep this test", "quick run only") overrides the choice.
 Declare the choice in the suite as `mode` with `modeReason` naming the signal; the first line of the chat report states the mode and that signal.
 Do not rely on the implementer's summary or PR description for intent or for what was tested; derive both from the human's request and the change itself, as `review-pr` does.
-When `validate-change` invokes this skill, it supplies `expectations.json` (K1..Kn) and the review handoff `review.json`; use them instead of deriving intent again. Cover each K with at least one case that names it in an `expects` list, and name the review's flows and suspicions a case covers in `flows` and `suspicions` (for example `"expects": ["K1"], "flows": ["F1"], "suspicions": ["H1"]`). Derive intent cases from K, never from review findings or the implementer's summary.
+When `validate-change` invokes this skill, it supplies `expectations.json` (K1..Kn) and the review handoff `review.json`; use them instead of deriving intent again. Link the list in the suite's `expectations` and cover each K with at least one case that names it in an `expects` list; a K no case can reach goes in `notCovered` with the reason, and the tool rejects a suite that leaves a K out of both (see `references/playwright-contract.md`, "Expectations"), and name the review's flows and suspicions a case covers in `flows` and `suspicions` (for example `"expects": ["K1"], "flows": ["F1"], "suspicions": ["H1"]`). Derive intent cases from K, never from review findings or the implementer's summary.
 
 Durable mode is `plan`, then explicit human approval, then `run`. Light mode does the same planning steps and runs straight away:
 
@@ -40,7 +40,8 @@ python3 .claude/skills/runtime-e2e-test/validate_test_plan.py <plan.md> --mode p
 python3 .claude/skills/runtime-e2e-test/validate_test_plan.py <plan.md> --mode completion --bundle <run-dir>
 ```
 
-After every run, whatever its outcome, validate the ledger with `--bundle <run-dir>`. It checks `Run ID`, `Tested revisions` and `Last updated` against the recorded run, each case's `Result`, `Can-fail` and `Actual path`, and each existing suite's status against the generated results. Use `--mode completion` only when claiming completion; for a `FAILED` or `BLOCKED` ledger use `--mode plan --bundle <run-dir>`, since completion mode also reports the unresolved cases.
+After every run, whatever its outcome, validate the ledger with `--bundle <run-dir>`. It checks `Run ID`, `Tested revisions` and `Last updated` against the recorded run, each case's `Result`, `Can-fail` and `Actual path`, and each existing suite's status against the generated results. Add `--fill` to copy those generated fields (and the run summary counts) from the bundle into the ledger first, instead of typing them; `Observed`, `Evidence`, `Cleanup`, `Path match`, `Status` and the sign-off stay yours to write.
+Use `--mode completion` only when claiming completion; for a `FAILED` or `BLOCKED` ledger use `--mode plan --bundle <run-dir>`, since completion mode also reports the unresolved cases.
 
 Runtime adapters rewrite the skill path when installed.
 
@@ -98,6 +99,8 @@ In light mode, follow these steps except the approval in the last one, then cont
 5. Separate agent-verifiable behavior from subjective human judgment.
 6. Define isolated fixtures, authentication, cleanup, environment restrictions, and concurrency safety.
 7. Write native Playwright tests and a `suite.json` contract mapping every case to one uniquely tagged test (or, for a `pr-test`, its file and title) and its required checks. Declare the base revision (normally the merge base with the target branch) and the base instance's environment from the project runtime reference. Declare `determinism` from the same reference: frozen time, seed data, and stubbed randomness where supported, normalization rules for IDs and timestamps, and every unsupported item as a limit. Declare `mode`, `modeReason`, and `blindSpots` as chosen above. Declare `existing` from the reference too: every test suite the project has (unit, integration, e2e), whole and unfiltered, with a JUnit report where the runner supports one; only when it has none, the reason.
+   Declare them even when no base instance can run: the tool then runs them on head only, a passing suite reports `PASS`, and a failing one `NOT_COMPARABLE`.
+   When the Playwright project lives below the evidence root, set `cwd` to its directory instead of absolute binary or config paths in `command`.
 8. For each expected outcome, name the assertion and observation source. Persistence claims require a fresh persisted-state observation; a successful response or toast is insufficient.
 9. Capture baseline values before mutation when proving invariants such as unchanged totals. Assert the final UI after reload and persisted state separately where both are required.
 10. Use real controls, stable unique locators, event-based waits, and bounded timeouts rather than arbitrary sleeps. No mocked production boundaries. Measure layout, such as whether text wraps, with the helpers in `references/playwright-contract.md`, and record the measured number as the check's actual value.
@@ -114,7 +117,7 @@ Do not freeze an implementation detail unless it identifies the production path 
 
 1. Read the entire plan, project runtime reference, and current repository authority.
 2. Run the documented preflight where needed; do not start against a prohibited or unidentified environment.
-3. Record the environment and configuration identity without storing secrets. The tool generates the run ID and records the head and base commits and start/finish times in `run-manifest.json`. Copy them from there into the ledger.
+3. Record the environment and configuration identity without storing secrets. Inspect environment variables by name only (for example `env | cut -d= -f1`), never print their values, and read config files for key names rather than echoing secret values. The tool generates the run ID and records the head and base commits and start/finish times in `run-manifest.json`. Copy them from there into the ledger.
 4. Check approval (durable mode) and snapshot the declared files, then execute through `scripts/evidence.py run`. Launch independent browsers; never attach to a shared Chrome DevTools MCP/CDP session. When the suite declares a base, the tool runs the same approved tests against the base revision in a separate worktree and app instance.
 5. Let Playwright drive the declared path and assert observable outcomes. Fresh contexts isolate sessions; run-marked fixtures isolate data. Serialize shared mutations or acquire the project lock before execution.
 6. Use the tool-generated native results, observations, attempts, trace, cleanup, and summary. Never hand-edit evidence or generated reports. Copy each case's `Actual path` from its recorded observations, then set `Path match` by comparing it with the case's `Runtime path`: `YES` only when both name the same entrypoint, boundary and outcome.

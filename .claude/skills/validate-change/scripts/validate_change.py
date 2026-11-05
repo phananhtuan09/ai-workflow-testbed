@@ -254,7 +254,9 @@ def diff_signals(files, settings, rules, versions):
             hits = [name for name in kept if rule["check"].search(name)]
         elif rule["scope"] in ("added", "removed", "changed"):
             sides = ("added", "removed") if rule["scope"] == "changed" else (rule["scope"],)
-            for name, change in kept.items():
+            # Line rules read application code; only rules about tests themselves read test files.
+            checked = {n: c for n, c in kept.items() if rule["id"].startswith("tests-") or not tests(n)}
+            for name, change in checked.items():
                 for side in sides:
                     hits += [f"{name}: {'+' if side == 'added' else '-'}{line.strip()[:120]}" for line in change[side] if rule["check"].search(line)]
         elif rule["check"] == "size":
@@ -306,10 +308,10 @@ def load_spc_checker():
 def separate_tests_from_signals(paths, changes=None):
     """Recommend security-performance-check from the changed code, in any language.
 
-    Every signal row is considered. A row is reported when a changed file hits one of its hints:
-    a path hint, or a content hint found in that file's added or removed lines (`changes`).
-    A content hit is enough on its own, so a narrow path glob can never hide server, auth, or
-    render code from the recommendation.
+    Every signal row is considered. A row is reported when a content hint is found in a changed
+    file's added or removed lines (`changes`), wherever the file lives. A path hint alone counts
+    only for a file with no changed text or a row with no content hints, because directory globs
+    such as `**/app/**` or `**/controllers/**` match whole frameworks regardless of the change.
     """
     checker = load_spc_checker()
     if checker is None:
@@ -322,7 +324,7 @@ def separate_tests_from_signals(paths, changes=None):
             ("performance", checker.load_performance_signals(SPC_PERFORMANCE_SIGNALS)),
         )
         for area, rows in tracks:
-            for row_id, hits in checker.hinted_paths(rows, path_list, changes).items():
+            for row_id, hits in checker.hinted_paths(rows, path_list, changes, content_required=True).items():
                 extra = f" +{len(hits) - 1}" if len(hits) > 1 else ""
                 entries.append({
                     "area": area,
@@ -354,8 +356,10 @@ def assess(root, base, worktree, expectations, rules_path, untracked=None):
     signals += intent_signals(expectations, rules)
     levels = {s["level"] for s in signals}
     ignored = matcher(settings["ignore"])
-    kept_paths = [name for name in sorted(files) if not ignored(name)]
-    separate = separate_tests_from_signals(kept_paths, diff_changes(files))
+    tests = matcher(settings["tests"])
+    # Security and performance probes target application code, so test files give no signal.
+    code_paths = [name for name in sorted(files) if not ignored(name) and not tests(name)]
+    separate = separate_tests_from_signals(code_paths, diff_changes(files))
     return {
         "schema": "validate-change/risk@1",
         "base": base,
@@ -540,6 +544,12 @@ def runtime_status(bundle, known, confirmed, review, head):
     if manifest.get("gitHead") != head:
         raise Inconsistent(f"runtime bundle ran on {manifest.get('gitHead')}, not the reviewed head {head}; run it again")
     suite = load(bundle / "inputs" / manifest["suite"])
+    # The runtime tool enforces that each K has a case or a notCovered reason only when the suite links the list.
+    linked = suite.get("expectations")
+    if not isinstance(linked, str) or not (bundle / "inputs" / linked).is_file():
+        raise Inconsistent(f"runtime suite {manifest['suite']} must link expectations.json in `expectations`, so every K has a case or a notCovered reason")
+    if sorted(i.get("id") for i in load(bundle / "inputs" / linked).get("items", [])) != sorted(known):
+        raise Inconsistent(f"runtime suite {manifest['suite']} ran against a different expectation list; run it again")
     # Without a review there is no handoff to check flow and suspicion references against.
     flows = {f["id"] for f in review.get("flows", [])} if review else None
     suspicions = {s["id"] for s in review.get("suspicions", [])} if review else None
@@ -556,7 +566,8 @@ def runtime_status(bundle, known, confirmed, review, head):
     line = next((l for l in audited.stdout.splitlines() if l.startswith("Audit:")), "Audit: no line")
     notes = intent_sweep_notes(line, results, cases, suite, confirmed) if audited.returncode == 1 else []
     status = "FAILED" if failed else "BLOCKED" if blocked else "NEEDS_REVIEW" if audited.returncode and not notes else "PASSED"
-    return {"status": status, "audit": line, "cases": cases, "failed": failed, "blocked": blocked, "notes": notes}
+    return {"status": status, "audit": line, "cases": cases, "failed": failed, "blocked": blocked, "notes": notes,
+            "notCovered": suite.get("notCovered", [])}
 
 
 def intent_sweep_notes(line, results, cases, suite, confirmed):
@@ -696,6 +707,14 @@ def evaluate(root, run_dir, rules_path):
             sections.append((runtime["status"], f"runtime-e2e-test: {runtime['audit']}"))
     covered = {i["id"]: coverage(i["id"], runtime["cases"]) if runtime else ("NOT_RUN", []) for i in items}
     thin = [k for k, (level, _) in covered.items() if level in ("NONE", "PARTIAL")]
+    if runtime:
+        # FULL counts passing cases; for an added or modified behavior it does not say a case could fail without the change.
+        unproven = [i["id"] for i in items if i["change"] in ("added", "modified") and covered[i["id"]][0] == "FULL"
+                    and not any(c["proof"] == "PROVEN" for c in runtime["cases"] if i["id"] in c["expects"])]
+        for entry in runtime["notCovered"]:
+            limits.append(f"{entry['k']}: không có case runtime; lý do: {entry['reason']}")
+        if unproven:
+            limits.append(f"{', '.join(unproven)}: coverage FULL chỉ nghĩa là case pass; chưa case nào chứng minh được là sẽ fail nếu thiếu thay đổi (can-fail chưa PROVEN).")
     if runtime and thin:
         sections.append(("NEEDS_REVIEW", f"kỳ vọng chưa được chứng minh đủ ở runtime: {', '.join(thin)}"))
 

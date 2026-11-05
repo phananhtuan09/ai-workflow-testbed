@@ -56,6 +56,17 @@ def local(root, name):
     return path
 
 
+def command_dir(root, data):
+    """The directory the approved command runs in: `cwd` (relative to the root) or the root itself."""
+    name = data.get("cwd", ".")
+    if not isinstance(name, str) or not name.strip() or Path(name).is_absolute():
+        raise ValueError("cwd must be a directory path relative to the root")
+    path = local(root, name)
+    if not path.is_dir():
+        raise ValueError(f"cwd is not a directory: {name}")
+    return path
+
+
 def contract(suite, root):
     data = load(suite)
     for key in ("plan", "environment", "revision"):
@@ -66,6 +77,7 @@ def contract(suite, root):
         raise ValueError("command must be a nonempty argument array")
     if any(x.startswith(("--output", "--reporter")) for x in command):
         raise ValueError("Runner owns --output and --reporter")
+    command_dir(root, data)
     base = data.get("base")
     if base is not None:
         if not isinstance(base, dict) or not isinstance(base.get("revision"), str) or not base["revision"].strip():
@@ -145,10 +157,11 @@ def contract(suite, root):
             if any(not check.get(k) for k in ("id", "expected", "source")):
                 raise ValueError("Checks need id, expected, source")
     blind_spots_contract(data.get("blindSpots"), ids, catalog())
+    linked = expectations_contract(data, cases, root)
     files = data.get("files", [])
     if not isinstance(files, list) or not files:
         raise ValueError("List test/config/helper files in files")
-    names = list(dict.fromkeys([str(suite.resolve().relative_to(root)), data["plan"], *files]))
+    names = list(dict.fromkeys([str(suite.resolve().relative_to(root)), data["plan"], *files, *linked]))
     hashes = {name: digest(local(root, name)) for name in names}
     plan = local(root, data["plan"]).read_text(encoding="utf-8")
     plan_ids = re.findall(r"^## Case ([A-Za-z0-9_.-]+)\s+[—-]\s+", plan, re.M)
@@ -159,6 +172,39 @@ def contract(suite, root):
     if checked.returncode:
         raise ValueError(checked.stderr or checked.stdout)
     return data, hashes
+
+
+def expectations_contract(data, cases, root):
+    """When the suite links an expectation list, every K is named by a case or declared in notCovered with a reason."""
+    path, uncovered = data.get("expectations"), data.get("notCovered", [])
+    if path is None:
+        if uncovered:
+            raise ValueError("notCovered needs expectations: the expectation list its K IDs come from")
+        return []
+    if not isinstance(path, str) or not path.strip():
+        raise ValueError("expectations names the expectation list file")
+    items = load(local(root, path)).get("items")
+    known = [i.get("id") for i in items] if isinstance(items, list) else []
+    if not known or any(not isinstance(k, str) or not k for k in known):
+        raise ValueError(f"{path}: the expectation list needs items with IDs")
+    if not isinstance(uncovered, list) or any(
+            not isinstance(e, dict) or set(e) != {"k", "reason"} or e["k"] not in known
+            or not isinstance(e["reason"], str) or not e["reason"].strip() for e in uncovered):
+        raise ValueError("notCovered entries give k, a K from the expectation list, and the reason no case covers it")
+    named = set()
+    for case in cases:
+        expects = case.get("expects", [])
+        if not isinstance(expects, list) or set(expects) - set(known):
+            raise ValueError(f"case {case['id']}: expects names K IDs from {path}")
+        named |= set(expects)
+    declared = [e["k"] for e in uncovered]
+    if len(declared) != len(set(declared)) or set(declared) & named:
+        raise ValueError("notCovered lists each K once, and never a K that a case names")
+    missing = [k for k in known if k not in named and k not in declared]
+    if missing:
+        raise ValueError(f"{', '.join(missing)} without a case: name each K in a case's expects, "
+                         "or declare it in notCovered with the reason")
+    return [path]
 
 
 def catalog(path=CATALOG):
@@ -857,7 +903,7 @@ def audit(bundle):
     approval = load(bundle / "approval.json")
     manifest = load(bundle / "run-manifest.json")
     suite = load(local(bundle / "inputs", manifest["suite"]))
-    required = {manifest["suite"], suite["plan"], *suite["files"]}
+    required = {manifest["suite"], suite["plan"], *suite["files"], *([suite["expectations"]] if suite.get("expectations") else [])}
     light = suite.get("mode") == "light"
     if set(approval["hashes"]) != required or (light != (approval.get("mode") == "light")) or not (light or approval.get("reviewer")):
         raise ValueError("Approval does not cover declared inputs")
@@ -996,7 +1042,8 @@ def run_base(bundle, root, data, run_id):
                     manifest["degraded"] = f"Base setup {step} exited {code}; see base/setup.log"
                     return
         try:
-            execute(run, tree, data["command"], {**fixed, **base["env"], "RUNTIME_E2E_RUN_ID": run_id + "-base"}, manifest)
+            # The approved head snapshot above already created cwd when it holds a listed file.
+            execute(run, local(tree, data.get("cwd", ".")), data["command"], {**fixed, **base["env"], "RUNTIME_E2E_RUN_ID": run_id + "-base"}, manifest)
         except ValueError as error:
             manifest["degraded"] = f"Base native report unusable: {error}"[:300]
         restore_base(tree, [name for name in data["files"] if name not in base.get("keep", [])])
@@ -1072,6 +1119,9 @@ def main():
     approval_path = suite.with_name(suite.name + ".approval.json")
     if args.mode == "validate":
         print("Suite and Markdown contract valid")
+        if data.get("notCovered"):
+            # Plan-time view, so the human hears about each gap before any case runs.
+            print("Expectations without a case: " + "; ".join(f"{e['k']} ({e['reason']})" for e in data["notCovered"]))
         if data.get("regression") is not None:
             # Plan-time view of the same map the run records, so cases can be added before approval.
             found = impact.build(root, data["base"]["revision"], data["regression"])
@@ -1112,7 +1162,7 @@ def main():
     manifest = {"runId": run_id, "suite": str(suite.relative_to(root)), "projectRoot": str(root), "environment": data["environment"], "revision": data["revision"], "gitHead": git.stdout.strip(), "gitStatus": dirty.stdout,
                 "environmentCheck": {**checked, "confirmed": bool(args.confirm_environment and checked["strong"])}}
     fixed = (data.get("determinism") or {}).get("env", {})
-    execute(bundle, root, data["command"], {**fixed, "RUNTIME_E2E_RUN_ID": run_id}, manifest)
+    execute(bundle, command_dir(root, data), data["command"], {**fixed, "RUNTIME_E2E_RUN_ID": run_id}, manifest)
     entries = (data.get("existing") or {}).get("suites", [])
     manifest["existing"] = {e["id"]: {"head": run_existing(bundle, root, e, {}, "head")} for e in entries}
     write(bundle / "run-manifest.json", manifest)

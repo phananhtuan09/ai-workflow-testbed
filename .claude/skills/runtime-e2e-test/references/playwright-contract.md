@@ -72,6 +72,9 @@ Paths below are relative to the project root; suite files live beside the Markdo
 }
 ```
 
+`command` runs in the project root, or in `cwd` when the suite sets it: a directory relative to the root, for a test project nested below it (for example `"cwd": "verify/e2e"` with `"command": ["npx", "--no-install", "playwright", "test", "specs/orders.spec.ts"]`).
+`files`, `plan`, and every other path stay relative to the root; on base the command runs in the same directory of the base worktree.
+
 `classification` is `new-behavior` (default; the case must fail on base) or `invariant` (expected to pass on base too).
 Include at least one `invariant` case when declaring a base: invariant cases double as a base health probe, and if none of them passes on base the base run is treated as degraded.
 A `pr-test` case runs a test the change itself added or modified, matched by file and title; it needs no tag or observations and its PASS is a native result only.
@@ -85,6 +88,13 @@ A suite needs at least one runtime case besides `pr-test` and `sweep` cases.
 A durable suite needs `approve` before `run`. A light suite lives with its plan outside `docs/testing/`, refuses `approve`, and runs without approval; its bundle records `approval.json` as `{"mode": "light", "reviewer": null}` with the hashes of what ran, and the audit accepts that only for a light suite.
 Before every run the tool checks the suite's env values and files for production-like hosts (anything but loopback, `.localhost`, `.local`, `.test`, `.internal`), real-looking credentials (live API keys, cloud access keys, tokens, private keys), shared stage hosts (`staging`, `dev`, `qa`, private networks), and credential-named variables with values. It stores the result as `environmentCheck` in `run-manifest.json`.
 In a light run a strong signal (production-like host, real-looking credential) stops the run before anything executes; rerun with `--confirm-environment` only after the human confirms, and the confirmation is recorded. Weak signals are listed among the limits. A durable run records the same check without stopping, because the human approved its environment.
+
+## Expectations
+
+`expectations` names an expectation list (`validate-change/expectations@1`, relative to the project root) when one exists, such as the `expectations.json` that `validate-change` supplies.
+With it, every K in the list must be named in some case's `expects`, or declared in `notCovered` as `{"k": "K5", "reason": "needs a data set the local stack cannot load"}`.
+`validate` and `run` reject a K that is neither, a K named in both, and an `expects` entry the list does not have; `validate` prints each `notCovered` K with its reason so the human hears about the gap before any case runs.
+The list is snapshotted with the other inputs, so editing it after a run makes that run stale.
 
 ## Blind spots
 
@@ -157,6 +167,7 @@ Copy its settings from the project runtime reference.
 
 `existing` lists the project's own test suites (unit, integration, e2e), copied from the project runtime reference.
 A suite with a `base` must declare it; when the project has no suites of its own, write `"existing": {"suites": [], "reason": "<why>"}`.
+Without a `base` it still runs them on head only: a passing suite is `PASS` ("no usable base run"), and a failing one is `NOT_COMPARABLE`, since head failures cannot be told apart from earlier ones.
 `run` runs each suite on head in the project root and on base in the base worktree, after putting every file it copied from the head snapshot back to its base version, so each revision runs its own tests. Base runs also receive `base.env`; neither receives `determinism.env`.
 Write `{report}` where the suite takes its JUnit XML output path, in an argument or an `env` value; the tool replaces it with a file in the bundle.
 With a report the tool compares each test; without one it compares exit codes only.
