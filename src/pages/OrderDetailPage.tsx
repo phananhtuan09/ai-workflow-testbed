@@ -50,6 +50,12 @@ export function OrderDetailPage() {
         <dd>{data.discountPercent}%</dd>
         <dt>{t('orders.total')}</dt>
         <dd data-testid="order-total">{formatMoney(orderTotalCents(data), locale)}</dd>
+        {data.discountPercent > 0 && (
+          <>
+            <dt>{t('orders.savings')}</dt>
+            <dd>{formatMoney(data.priceCents - orderTotalCents(data), locale)}</dd>
+          </>
+        )}
         <dt>{t('orders.status')}</dt>
         <dd>
           <span className={`badge badge--${data.status}`}>{t(`orders.status.${data.status}`)}</span>
