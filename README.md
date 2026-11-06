@@ -6,7 +6,7 @@ This repository is used to try [ai-agent-workflow](https://github.com/phananhtua
 ## Features
 
 - Sign in with one of three seeded accounts; sessions use an HTTP-only cookie.
-- Orders list with loading, empty, and error states.
+- Orders list with loading, empty, and error states, and the number of orders under the title.
   Users see only their own orders; admins see every order and its owner.
 - Create and edit orders with a name (max 100 characters), a price, and a discount (0–50%, admins only).
 - Order detail with total price; admins can confirm or delete an order.

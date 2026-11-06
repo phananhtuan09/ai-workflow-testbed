@@ -12,6 +12,8 @@ export const vi: Record<MessageKey, string> = {
   'orders.title': 'Đơn hàng',
   'orders.new': 'Tạo đơn',
   'orders.empty': 'Chưa có đơn hàng nào.',
+  'orders.countOne': '1 đơn hàng',
+  'orders.countMany': '{count} đơn hàng',
   'orders.name': 'Tên',
   'orders.owner': 'Người tạo',
   'orders.price': 'Giá',
