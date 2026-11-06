@@ -104,7 +104,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/review-pr/SKILL.md",
-      "hash": "sha256:30ffcaf0b16ff1db5ad879d659d71ad0b2237f8e62fd2ec74beb82156489962a"
+      "hash": "sha256:fc04e1cbc58b15b9bd89c0c8c08a3708d69a604238d8a7586f2be6ad59aa9d4d"
     },
     {
       "scope": "repository",
@@ -114,7 +114,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/references/playwright-contract.md",
-      "hash": "sha256:c5f75d2515557a4c60d69d654d13912ae8a545db44747f4b61b84d0b67f85243"
+      "hash": "sha256:215b92ebbfb696beb999a7a30d0e41de5db586a0e204ccccdb7c347073ac4b38"
     },
     {
       "scope": "repository",
@@ -124,7 +124,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/scripts/evidence.py",
-      "hash": "sha256:8698e7ae3eb4e20da60bec19c92de3d240097dde8946877ba97fb5b4f59104b1"
+      "hash": "sha256:963b496247f8ccbae317e873ff1ae1dac39a00e4cd5480e8d43524501cd743b5"
     },
     {
       "scope": "repository",
@@ -133,13 +133,23 @@
     },
     {
       "scope": "repository",
+      "path": ".claude/skills/runtime-e2e-test/scripts/instance.py",
+      "hash": "sha256:42e2fa3500e50806ed0e08c09e2bc58168f6cc49a20d489f5fe0b606517acfe5"
+    },
+    {
+      "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/scripts/report.py",
       "hash": "sha256:4d3011a169c42392c0ea9636154b06c3815076d74b251300188b4c46df47c38c"
     },
     {
       "scope": "repository",
+      "path": ".claude/skills/runtime-e2e-test/scripts/setup.py",
+      "hash": "sha256:60b862a6241ef9aa1a9e827ad7a639db0ae22d15105f48b8545f9cc994aa8b68"
+    },
+    {
+      "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/SKILL.md",
-      "hash": "sha256:23145c786ef08f52e5598ecbbac55fa14fe92f4a953429b21baa4fdea00f868f"
+      "hash": "sha256:b3e8849d1625928872cac1125543bf8da9e8a71df3086df052aa2c127301be9a"
     },
     {
       "scope": "repository",
@@ -174,7 +184,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/security-performance-check/SKILL.md",
-      "hash": "sha256:b0249dc50cbabbf4815d5572706a810f836338471ffa78054ab19e3267f3fdb0"
+      "hash": "sha256:051c8224c968bcee9905180bcaae8d959c11e665404ea3246ec4bf850958bfb3"
     },
     {
       "scope": "repository",
@@ -189,12 +199,12 @@
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/scripts/validate_change.py",
-      "hash": "sha256:4aac848fb10f9dd93fe0a7ec19e54235fb9d02808ed3fad1d331f392fcf5ef0b"
+      "hash": "sha256:f2f3913ffd9a419d05ceca8e59f8fbebfa4d15f4e605aa3d8ab4377ea7f071f7"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/SKILL.md",
-      "hash": "sha256:a5968a559e77ac10d976f817c9a267220567f80e04f1791a41572460160902ba"
+      "hash": "sha256:d638662cc0473c3f3d77ef542a934228bc3e97034c135e32df5f175946a8df9c"
     },
     {
       "scope": "repository",
