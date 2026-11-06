@@ -5,8 +5,10 @@ skill, keep commands and paths current, and never store secret values here.
 
 - Status: READY
 - Maintainer: phananhtuan09
-- Last verified: 2026-10-28
+- Last verified: 2026-11-06
+- Setup evidence: `/home/user/ai-workflow-testbed/.runtime-e2e/setup/main`, `/home/user/ai-workflow-testbed/.runtime-e2e/setup/base`
 - Applies to: Order Desk (`main`), Node 22, Playwright 1.63.0
+- Setup sample: `curl -fsS http://localhost:5173/api/health`
 
 Use `Status: READY` only after the preflight commands and environment assumptions
 below have been verified in this project.
@@ -17,8 +19,7 @@ Playwright's `webServer` (in `playwright.config.ts`) starts both services throug
 
 | Service | Working directory | Start command | Ready signal | Stop/reset command | Log location |
 | --- | --- | --- | --- | --- | --- |
-| web (Vite) | `.` | `npm run dev:web` (via `npm run dev`) | `http://localhost:$WEB_PORT/` | Stopped by Playwright; reset not needed | Playwright `webServer` output in `stdout.log` of the run bundle |
-| api (Express) | `.` | `npm run dev:api` (via `npm run dev`) | `GET http://localhost:$WEB_PORT/api/health` returns `{"ok":true}` | `POST /api/test/reset` (only with `TEST_MODE=1`) or `npm run db:reset` | Same as web |
+| `order-desk` | `.` | `npm run dev` | url `http://localhost:{WEB_PORT}/api/health` | terminate the start process group | `start.log` in the setup evidence |
 
 ## Environment
 
@@ -117,10 +118,52 @@ Tests must emit structured checkpoint observations, not screenshot-only proof.
 ## Base instance
 
 Used when a suite declares `base` to prove that new-behavior tests can fail.
+A suite uses it with `"instance": "project-runtime"`; `evidence.py` reads the JSON below and serves each worktree from it.
 
-- Base environment: `WEB_PORT=5273`, `API_PORT=3101`, `DATA_DIR=.data/e2e-base` (the head run keeps 5173/3001 and `.data/e2e`).
-- Base setup: `["npm", "ci", "--prefer-offline", "--no-audit", "--no-fund"]` in the base worktree.
-- Base start limitations: NONE; Playwright's `webServer` starts the base app from the worktree with the base environment.
+- Base instance: READY
+- Resources: shared, chosen by the human: worktree instances use the local stack's ports, database, and services, so each runs only while the local stack is stopped
+- Proven refs: 2224054603db603d59f01003c56557a34df6d9c5
+- Shares with the main stack: ports 5173 and 3001, DATA_DIR name .data/e2e (separate files per worktree)
+
+```json
+{
+  "name": "order-desk",
+  "cwd": ".",
+  "resources": "shared",
+  "copy": [],
+  "start": [
+    "npm",
+    "run",
+    "dev"
+  ],
+  "ready": {
+    "url": "http://localhost:{WEB_PORT}/api/health"
+  },
+  "ports": {
+    "WEB_PORT": "5173",
+    "API_PORT": "3001"
+  },
+  "env": {
+    "DATA_DIR": ".data/e2e",
+    "TEST_MODE": "1",
+    "FIXED_NOW": "2026-02-01T08:00:00.000Z"
+  },
+  "setup": [
+    [
+      "npm",
+      "ci",
+      "--prefer-offline",
+      "--no-audit",
+      "--no-fund"
+    ]
+  ],
+  "timeout": 120,
+  "shares": [
+    "ports 5173 and 3001",
+    "DATA_DIR name .data/e2e (separate files per worktree)"
+  ]
+}
+```
 
 ## Existing test suites
 
