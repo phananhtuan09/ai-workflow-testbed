@@ -2,8 +2,15 @@ import type { Locale } from '../i18n';
 
 const localeTags: Record<Locale, string> = { en: 'en-US', vi: 'vi-VN' };
 
+// `trailingZeroDisplay` is not in the ES2022 lib types yet.
+const moneyOptions: Intl.NumberFormatOptions & { trailingZeroDisplay?: 'auto' | 'stripIfInteger' } = {
+  style: 'currency',
+  currency: 'USD',
+  trailingZeroDisplay: 'stripIfInteger',
+};
+
 export function formatMoney(cents: number, locale: Locale): string {
-  return new Intl.NumberFormat(localeTags[locale], { style: 'currency', currency: 'USD' }).format(cents / 100);
+  return new Intl.NumberFormat(localeTags[locale], moneyOptions).format(cents / 100);
 }
 
 export function formatDate(iso: string, locale: Locale): string {

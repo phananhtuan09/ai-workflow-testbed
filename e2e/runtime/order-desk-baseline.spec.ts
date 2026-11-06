@@ -40,7 +40,8 @@ test('[E2E-02] a user creates an order and it persists after reload', async ({ p
 
     await page.getByRole('link', { name: 'New order' }).click();
     await page.getByLabel('Name').fill('Desk lamp');
-    await page.getByLabel('Price').fill('25.50');
+    await page.getByLabel('Product').fill('Desk lamp');
+    await page.getByLabel('Unit price').fill('25.50');
     const createResponse = page.waitForResponse((response) => response.url().endsWith('/api/orders') && response.request().method() === 'POST');
     await page.getByRole('button', { name: 'Save' }).click();
     const created = await createResponse;
