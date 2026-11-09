@@ -114,7 +114,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/references/playwright-contract.md",
-      "hash": "sha256:31f7d175a16887af9916f5da4056d7787b217b28c893afdacf5ee9e5f2f49790"
+      "hash": "sha256:24692731e1bd9f05e0188100056322a83d50460b0e508a5dca8185f3c7bc294c"
     },
     {
       "scope": "repository",
@@ -129,7 +129,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/scripts/explore.cjs",
-      "hash": "sha256:3902d9df925c3e71f0c39895fc1e8bf393af2ffe9251ee54c4ed10d9bfd54593"
+      "hash": "sha256:9ea6f1454f5dde510b8bd983b9e09a6732873f20c05732ba094c7d7f31351b14"
     },
     {
       "scope": "repository",
