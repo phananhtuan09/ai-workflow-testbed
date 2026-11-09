@@ -114,7 +114,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/references/playwright-contract.md",
-      "hash": "sha256:50ccc497e6b176b51b00ee10700bf89ca1795ba1b2c3144c2903b9b269053560"
+      "hash": "sha256:31f7d175a16887af9916f5da4056d7787b217b28c893afdacf5ee9e5f2f49790"
     },
     {
       "scope": "repository",
@@ -124,7 +124,12 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/scripts/evidence.py",
-      "hash": "sha256:97c71d349996e9be9a9806f6a2257067e63efcfe9f67ab5632c924f2fb4b0a11"
+      "hash": "sha256:5138916d6e33762516bfc5e935c62ee3c96e3690b5a2e7179527981ebde0718c"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/runtime-e2e-test/scripts/explore.cjs",
+      "hash": "sha256:3902d9df925c3e71f0c39895fc1e8bf393af2ffe9251ee54c4ed10d9bfd54593"
     },
     {
       "scope": "repository",
@@ -149,7 +154,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/SKILL.md",
-      "hash": "sha256:7efc479ade49d8c8666363d5a807a08dbecc6b9dbb127a371a1fa1f1c20aaf9c"
+      "hash": "sha256:64077c3535115c571196ed8a120b43f4ae2ec55e294b0ed48c5cb3635c80aa58"
     },
     {
       "scope": "repository",
@@ -214,67 +219,22 @@
     {
       "scope": "repository",
       "path": "AGENTS.md",
-      "hash": "sha256:dacf7cf85985e84b17dd963817960f014f72cf641a535134d3ff667cb48c9f02"
+      "hash": "sha256:f3ee10c10991faa237138ad5b9ba97aa4c020f6444d185e237cb8b1cdf823049"
     },
     {
       "scope": "repository",
-      "path": "docs/decisions/README.md",
-      "hash": "sha256:9e4ad815eb97e0daa7ea5d548fa9bcc2465b73d4355e607fbc04a0f1622e0217"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/observed/README.md",
-      "hash": "sha256:045b83c11303b3374a16691fef9a30d4972a156f6e55807b0062b7244aa702b2"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/patterns/README.md",
-      "hash": "sha256:2309159251cc64992e7b06b4eaf732b25f3c5710a3a9df2ad761bd319a6d2f77"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/plans/active/README.md",
-      "hash": "sha256:a13b93e3ba88081b3cb2348fe9306654e86d0a4ef8266d8c04b72a477b480ecb"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/plans/completed/README.md",
-      "hash": "sha256:e768002051a0d34c4c6d7da4398ebca9d5063e29ff2d30a60936c71823f826ec"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/product/README.md",
-      "hash": "sha256:8d2a5bdc221ebe8c2c31659da1c7bbeb5582ba5f9b0ef1c987e49fb2b685be1d"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/README.md",
-      "hash": "sha256:17f19daaa83c9a276ea9d4d8c182e0eda3dcb89ceae56d28a5aba4a725891c92"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/runbooks/README.md",
-      "hash": "sha256:ed9ec29ad46285e5c1a701f9738ae036157cd6fe6cd6a579d46bb29ff5c80edf"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/testing/active/README.md",
-      "hash": "sha256:d60f7e65c29c0b11e8b7e86a34ff11aa65b535e327989506417e75c729de7e5a"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/testing/completed/README.md",
-      "hash": "sha256:7009b3ee2b9465635ecfc24a13d374d84d1d491c55fd5e315f8a7023072f050b"
+      "path": "docs/DECISIONS.md",
+      "hash": "sha256:e7f6cf6458f11083895fda1faf2a8e134ca8977c62dfe9448ff81e3bdb471ca9"
     },
     {
       "scope": "repository",
       "path": "docs/testing/README.md",
-      "hash": "sha256:0f1b31d1d19c5dba2b04e8d17032c1e324ea0719114d9cfed2e247f125eaaf56"
+      "hash": "sha256:9c43121362f286919b86d8326ab0019a496639518d8752df84215d331fe7ee30"
     },
     {
       "scope": "repository",
       "path": "docs/WORKFLOW.md",
-      "hash": "sha256:601e100a04727ac9c6269b2b8da803005b6c057e0096193f101baf28fe337c1a"
+      "hash": "sha256:6cc1600b143ddccbe25455e1d388ef7b4d09f0faa2a2523609446608782bad52"
     }
   ]
 }

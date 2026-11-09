@@ -62,7 +62,7 @@ Run it when the human asks (`/runtime-e2e-test setup`) or accepts the suggestion
 It proves how the project runs, so a later validation run never stops on environment configuration.
 Only local targets are in scope: the tool refuses a ready or sibling URL on any other host, and it never swaps or restarts the human's running stack.
 
-1. Run `scripts/setup.py detect` and read the candidates it prints; each cites the file and line it came from (`package.json`, `Makefile`, compose files, `playwright.config.*`, env-file names, `README.md`, `docs/runbooks/`).
+1. Run `scripts/setup.py detect` and read the candidates it prints; each cites the file and line it came from (`package.json`, `Makefile`, compose files, `playwright.config.*`, env-file names, `README.md`, and, only in an older project that still has it, `docs/runbooks/`, whose commands are unverified candidates rather than authority).
    It never prints an env-file value.
 2. Ask the human once, before writing the recipe, which resources a worktree instance uses, and record the answer as `resources`:
    - `shared`: the local stack's ports, database, services, and local files such as `.env` (listed in `copy`). Nothing new is created; the instance runs only while the local stack is stopped.
@@ -87,8 +87,7 @@ Only local targets are in scope: the tool refuses a ready or sibling URL on any 
    It writes only proven fields: `Status`, the topology row, required variable names, `Setup sample`, `## Base instance` with the resources choice and the recipe as JSON, `Last verified`, and `Setup evidence`.
    A failed main stack sets `Status: BLOCKED — <step>: <reason>` and leaves every unproven field a placeholder; a proven main stack with no ready parallel instance keeps `Status: READY` and sets `Base instance: BLOCKED` with the reason.
    An unchanged result leaves the file untouched, so a re-run on an unchanged project makes no edits.
-7. Fill the remaining fields of the reference only from what you executed; leave the rest for the human.
-8. Write or update `docs/runbooks/local-startup.md` from the proven steps, following `docs/runbooks/README.md`, unless an equivalent runbook already exists; update `Last verified` there only when the procedure ran.
+7. Fill the remaining fields of the reference only from what you executed; leave the rest for the human. The reference is the project's record of how to start the runtime; do not write a separate runbook.
 
 Secret values never reach a file: the tool reads env files and the environment by name only and masks credential-like values in every log it keeps.
 
@@ -122,7 +121,7 @@ Use this capability when verification has multiple cases, crosses runtime bounda
 
 A runtime case exercises the running system through its real user or operational entrypoint. Unit, widget, mocked, static-analysis, build, and source-inspection checks may supplement a run, but they never make a runtime case pass. List each one under `## Supporting checks` with its own result (`PASS`, `FAIL`, or `NOT_RUN` with the reason), never only in prose, and report every listed check that did not run. The project's own test suites are not supporting checks: declare them as existing suites so the tool runs them on base and head.
 
-Interactive browser tools may discover selectors or debug a failure, but cannot replace script execution or score an automated case.
+Interactive browser tools may debug a failure, but cannot replace exploration, script execution, or score an automated case.
 The fixed constraints are:
 
 1. Exercise the declared runtime path.
@@ -148,7 +147,9 @@ In light mode, follow these steps except the approval in the last one, then cont
 8. For each expected outcome, name the assertion and observation source. Persistence claims require a fresh persisted-state observation; a successful response or toast is insufficient.
 9. Capture baseline values before mutation when proving invariants such as unchanged totals. Assert the final UI after reload and persisted state separately where both are required.
 10. Use real controls, stable unique locators, event-based waits, and bounded timeouts rather than arbitrary sleeps. No mocked production boundaries. Measure layout, such as whether text wraps, with the helpers in `references/playwright-contract.md`, and record the measured number as the check's actual value.
-   Before the first scored run, open each screen a case uses once on the running head (an interactive browser is fine) and write locators, option values, dialog steps, and the wait for async completion from what it shows, not from source alone; in durable mode, stay read-only until approval.
+   Before writing a browser test against a served head, explore it with `scripts/evidence.py explore` (see `references/playwright-contract.md`, `## Exploration`): one flow per user path, through every state a case asserts on, in each locale and viewport the cases use.
+   Write locators, option values, dialog steps, and the wait for async completion from its record, not from source, and list the record in the suite's `explore`; `validate` refuses a literal locator the record does not show.
+   In durable mode, explore with `writes: false` until approval.
 11. Mark `READY` only when paths, expectations, scripts, and required evidence are reviewable. Validate the Markdown and suite contracts.
 12. Durable mode: stop and ask the human to review the plan, tests, fixtures, config, and commands. Record approval only after an explicit decision, using the evidence tool's `approve` command. Light mode: run now.
 
