@@ -18,7 +18,8 @@ test('a user creates an order and it persists after reload', async ({ page }) =>
   await login(page, users.alice);
   await page.getByRole('link', { name: 'New order' }).click();
   await page.getByLabel('Name').fill('Desk lamp');
-  await page.getByLabel('Price').fill('25.50');
+  await page.getByLabel('Product').fill('Desk lamp');
+  await page.getByLabel('Unit price').fill('25.50');
   await page.getByRole('button', { name: 'Save' }).click();
 
   await expect(page.getByRole('heading', { name: 'Desk lamp' })).toBeVisible();
