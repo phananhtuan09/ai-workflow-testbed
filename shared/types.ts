@@ -7,7 +7,7 @@ export interface User {
   role: Role;
 }
 
-export type OrderStatus = 'draft' | 'confirmed';
+export type OrderStatus = 'draft' | 'confirmed' | 'cancelled';
 
 export interface Order {
   id: number;

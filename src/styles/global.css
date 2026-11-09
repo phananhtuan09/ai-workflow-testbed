@@ -208,6 +208,12 @@ h1 {
   color: var(--color-success);
 }
 
+.badge--cancelled {
+  background: #f3f4f6;
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+
 .order-title {
   margin-top: var(--space-3);
   overflow-wrap: anywhere;
