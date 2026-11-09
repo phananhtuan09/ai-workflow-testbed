@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { validateOrderInput } from '../shared/order-rules';
-import type { Order, OrderInput, OrderWithOwner } from '../shared/types';
+import type { Order, OrderInput, OrderView, OrderWithOwner } from '../shared/types';
 import { requireAuth, requireRole } from './auth';
 import { now } from './clock';
 import { getDb, saveDb } from './db';
@@ -47,9 +47,17 @@ function readInput(req: Request, res: Response): OrderInput | undefined {
   return { ...input, name: input.name.trim() };
 }
 
+const VIEWS: OrderView[] = ['active', 'archived', 'all'];
+
+function inView(order: Order, view: OrderView): boolean {
+  if (view === 'all') return true;
+  return view === 'archived' ? Boolean(order.archived) : !order.archived;
+}
+
 ordersRouter.get('/', (req, res) => {
+  const view = VIEWS.includes(req.query.show as OrderView) ? (req.query.show as OrderView) : 'active';
   const orders = getDb()
-    .orders.filter((order) => canAccess(req, order))
+    .orders.filter((order) => canAccess(req, order) && inView(order, view))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   res.json(orders.map(withOwner));
 });
@@ -93,6 +101,26 @@ ordersRouter.post('/:id/confirm', requireRole('admin'), (req, res) => {
   const order = findAccessibleOrder(req, res);
   if (!order) return;
   order.status = 'confirmed';
+  saveDb();
+  res.json(withOwner(order));
+});
+
+ordersRouter.post('/:id/archive', (req, res) => {
+  const order = findAccessibleOrder(req, res);
+  if (!order) return;
+  if (order.status === 'confirmed') {
+    res.status(409).json({ error: 'errors.archiveConfirmed' });
+    return;
+  }
+  order.archived = true;
+  saveDb();
+  res.json(withOwner(order));
+});
+
+ordersRouter.post('/:id/restore', (req, res) => {
+  const order = findAccessibleOrder(req, res);
+  if (!order) return;
+  order.archived = false;
   saveDb();
   res.json(withOwner(order));
 });
