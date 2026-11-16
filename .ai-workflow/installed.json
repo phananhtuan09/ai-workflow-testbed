@@ -104,7 +104,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/review-pr/SKILL.md",
-      "hash": "sha256:30ffcaf0b16ff1db5ad879d659d71ad0b2237f8e62fd2ec74beb82156489962a"
+      "hash": "sha256:fc04e1cbc58b15b9bd89c0c8c08a3708d69a604238d8a7586f2be6ad59aa9d4d"
     },
     {
       "scope": "repository",
@@ -114,17 +114,22 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/references/playwright-contract.md",
-      "hash": "sha256:21b711cdd4857c8d2cea2b97be9dee051b4c76464f4d3dac9311f5af474ef132"
+      "hash": "sha256:4a3ac45919978533be09003c16eb00ec12c0388161f3dbcbd6a87b0f3623b0fc"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/references/project-runtime.md",
-      "hash": "sha256:b5df932b1e480d5c0f164b9ccdc9dadce529f1870f0db4e2e206568cc8ab9207"
+      "hash": "sha256:0ee69f638e3660669f74448839048a275a88456a135e6c338827ba4cebd3f4df"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/scripts/evidence.py",
-      "hash": "sha256:994f2f5fff785095d5a471c2a1813ef634dd841d32df5fe1f6a46c7bc0f21720"
+      "hash": "sha256:6089f09056dab8b4848aba06b9d0a8813698faff65d1be2c2204a448d473b705"
+    },
+    {
+      "scope": "repository",
+      "path": ".claude/skills/runtime-e2e-test/scripts/explore.cjs",
+      "hash": "sha256:eea0496ece177f0d1b9c863ddb497c0bccbffa1767d239a64e24f69bee9aad88"
     },
     {
       "scope": "repository",
@@ -133,18 +138,28 @@
     },
     {
       "scope": "repository",
+      "path": ".claude/skills/runtime-e2e-test/scripts/instance.py",
+      "hash": "sha256:011bed39975d160c4eb37ba5263af6848959b8fd418216fec572cc1b1f04e629"
+    },
+    {
+      "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/scripts/report.py",
       "hash": "sha256:4d3011a169c42392c0ea9636154b06c3815076d74b251300188b4c46df47c38c"
     },
     {
       "scope": "repository",
+      "path": ".claude/skills/runtime-e2e-test/scripts/setup.py",
+      "hash": "sha256:d9fc0261b6df853423267b3498598b292f9e936c2f1551af2b2b235580cde7fb"
+    },
+    {
+      "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/SKILL.md",
-      "hash": "sha256:74704bad1afc1ffc48f30ed9ea9b17624f667e5eba13f312dc4efd862a465f13"
+      "hash": "sha256:0b2368eab428052b3700f00353618b9e3cf79dcda0b2bbb77817a3e125997b99"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/validate_test_plan.py",
-      "hash": "sha256:3197dff9452d9e8e4d97ac6ff2fb5a5ab8d4416d64a7a83a75b6a2ec401c813f"
+      "hash": "sha256:6bdeb5b0912427d9baec9cea64b72c507fa21b888d7c0bb691df9eb6123fc376"
     },
     {
       "scope": "repository",
@@ -169,12 +184,12 @@
     {
       "scope": "repository",
       "path": ".claude/skills/security-performance-check/scripts/check_findings.py",
-      "hash": "sha256:5a61dda36ca7a5a2ee860c81f61cf9e6e05303f2af6435186807dae2b647df2f"
+      "hash": "sha256:0bb848a80a3ba753438bd283188aa70ce15080bdd1151df25e9cfb4ea2a6599a"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/security-performance-check/SKILL.md",
-      "hash": "sha256:b0249dc50cbabbf4815d5572706a810f836338471ffa78054ab19e3267f3fdb0"
+      "hash": "sha256:051c8224c968bcee9905180bcaae8d959c11e665404ea3246ec4bf850958bfb3"
     },
     {
       "scope": "repository",
@@ -184,17 +199,17 @@
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/references/risk-rules.md",
-      "hash": "sha256:9951edd8ece4c65d0e3a9ad4c50e2778f42bc89f8867fdfb2396907891a3a925"
+      "hash": "sha256:784ad6afce34d2f14bb2b1eaecb8847b4d6a4042bfdcaba9b803dfae42fb5268"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/scripts/validate_change.py",
-      "hash": "sha256:6056beea1356b096b3a674602fcbe6a4587e17e7374607bdcbdca61bdb14b42e"
+      "hash": "sha256:9583fa7992effd7f0c890480093dfac6791be9d3e8be567fc5b3691bfb54103a"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/SKILL.md",
-      "hash": "sha256:7f4f1c9eced41f6c928e921ff0f0ac32f46cf31cefec846d34fe39b42f44e52d"
+      "hash": "sha256:f19599dfde5ab829759371a46154d9be9bf1e8132c1d9b99e6747a8c210c7da6"
     },
     {
       "scope": "repository",
@@ -204,67 +219,22 @@
     {
       "scope": "repository",
       "path": "AGENTS.md",
-      "hash": "sha256:dacf7cf85985e84b17dd963817960f014f72cf641a535134d3ff667cb48c9f02"
+      "hash": "sha256:f3ee10c10991faa237138ad5b9ba97aa4c020f6444d185e237cb8b1cdf823049"
     },
     {
       "scope": "repository",
-      "path": "docs/decisions/README.md",
-      "hash": "sha256:9e4ad815eb97e0daa7ea5d548fa9bcc2465b73d4355e607fbc04a0f1622e0217"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/observed/README.md",
-      "hash": "sha256:045b83c11303b3374a16691fef9a30d4972a156f6e55807b0062b7244aa702b2"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/patterns/README.md",
-      "hash": "sha256:2309159251cc64992e7b06b4eaf732b25f3c5710a3a9df2ad761bd319a6d2f77"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/plans/active/README.md",
-      "hash": "sha256:a13b93e3ba88081b3cb2348fe9306654e86d0a4ef8266d8c04b72a477b480ecb"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/plans/completed/README.md",
-      "hash": "sha256:e768002051a0d34c4c6d7da4398ebca9d5063e29ff2d30a60936c71823f826ec"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/product/README.md",
-      "hash": "sha256:8d2a5bdc221ebe8c2c31659da1c7bbeb5582ba5f9b0ef1c987e49fb2b685be1d"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/README.md",
-      "hash": "sha256:17f19daaa83c9a276ea9d4d8c182e0eda3dcb89ceae56d28a5aba4a725891c92"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/runbooks/README.md",
-      "hash": "sha256:ed9ec29ad46285e5c1a701f9738ae036157cd6fe6cd6a579d46bb29ff5c80edf"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/testing/active/README.md",
-      "hash": "sha256:d60f7e65c29c0b11e8b7e86a34ff11aa65b535e327989506417e75c729de7e5a"
-    },
-    {
-      "scope": "repository",
-      "path": "docs/testing/completed/README.md",
-      "hash": "sha256:7009b3ee2b9465635ecfc24a13d374d84d1d491c55fd5e315f8a7023072f050b"
+      "path": "docs/DECISIONS.md",
+      "hash": "sha256:e7f6cf6458f11083895fda1faf2a8e134ca8977c62dfe9448ff81e3bdb471ca9"
     },
     {
       "scope": "repository",
       "path": "docs/testing/README.md",
-      "hash": "sha256:0f1b31d1d19c5dba2b04e8d17032c1e324ea0719114d9cfed2e247f125eaaf56"
+      "hash": "sha256:9c43121362f286919b86d8326ab0019a496639518d8752df84215d331fe7ee30"
     },
     {
       "scope": "repository",
       "path": "docs/WORKFLOW.md",
-      "hash": "sha256:601e100a04727ac9c6269b2b8da803005b6c057e0096193f101baf28fe337c1a"
+      "hash": "sha256:6cc1600b143ddccbe25455e1d388ef7b4d09f0faa2a2523609446608782bad52"
     }
   ]
 }

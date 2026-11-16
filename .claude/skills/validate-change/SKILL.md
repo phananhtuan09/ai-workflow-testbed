@@ -25,7 +25,9 @@ Use `<evidence root>/<slug>/validate/`, under the evidence root that `runtime-e2
 | File | Written by | Holds |
 | --- | --- | --- |
 | `expectations.json` | this skill | K1..Kn and conflicts |
+| `pr-description.md`, `claims.json` | `validate_change.py claims`, then this skill labels each claim | the PR description as written, one claim per line |
 | `risk.json` | `validate_change.py risk` | risk signals, gate, audit requirement |
+| `gate.json` | `validate_change.py gate` | the items the gate showed |
 | `run.json` | this skill | gate answer, steps, `Cần test riêng`, limits |
 | `review.json` | `review-pr` | the review status and the handoff |
 | `audit-input.json` | `validate_change.py audit-input` | what the auditor may see |
@@ -36,7 +38,9 @@ Never hand-edit a generated file. The tool recomputes `risk.json` from the diff 
 
 ## 1. Scope and expectations
 
-Resolve the change set as `review-pr` does (PR, refs, range, or working tree), and record the base ref.
+Resolve the change set as `review-pr` does (PR, refs, range, or working tree).
+For a PR or pushed branch, run `runtime-e2e-test/scripts/evidence.py refs --source <branch or pull/<n>/head> --into <target>`: it fetches both from the remote and prints the head SHA and the merge-base SHA. Record both, pass them to `risk` as `--base <merge-base SHA> --head <head SHA>`, and hand the same `head` and `base` to the runtime suite, so every step sees the same commits whatever the local branches or the checkout hold.
+For a change not pushed yet, use `refs --local --into <target>` and `risk --worktree`, and state in the report that head is the local checkout.
 
 Build exactly one expectation list in `expectations.json`; every later step consumes it and none derives intent again:
 
@@ -62,7 +66,13 @@ Build exactly one expectation list in `expectations.json`; every later step cons
   - `assumption`: a point the sources leave open, with the `default` you chose.
   - `agent-intent`: behavior only the implementer's account or the diff suggests. The PR description is never an intent source: anything taken from it is `agent-intent` with `sourceRef: pr-description`.
 - When the prompt and the spec disagree, keep both items and record the conflict. Never pick one silently.
-- Read the PR description before the gate. A claim that it does something "as requested" (or otherwise on the human's behalf) that contradicts a K becomes an `agent-intent` item with `sourceRef: pr-description` and a conflict with that K, so the gate shows it.
+  Record a conflict only when two sources expect different outcomes for the same observable state; a difference in wording, detail, or scope that one outcome satisfies is not a conflict.
+- Save the PR description to a file and run `validate_change.py claims <run-dir> --description <file>` (`--none` when the change has no description). It writes `claims.json` with one claim per line and marks each line that speaks for the human (the `delegation` phrases in `references/risk-rules.md`, such as "as requested").
+  Label every claim with `relation` and `kRefs`:
+  - `matches`: it describes a K; a claim that speaks for the human names a `prompt` or `spec` K.
+  - `beyond`: behavior no human source asks for; record it as an `agent-intent` item with `sourceRef: pr-description` and name that item.
+  - `contradicts`: it goes against a K; record the `agent-intent` item and a conflict with that K, and name the item.
+  - `none`: no behavior (headings, notes, test commands); never allowed on a line that speaks for the human.
 - Ask nothing yet; the gate asks once.
 
 ## 2. Risk gate
@@ -71,13 +81,21 @@ Run `python3 <skill-dir>/scripts/validate_change.py risk <run-dir> --base <ref>`
 It applies `references/risk-rules.md`, a project-editable table of deterministic gate and audit signals: money, data, and permission paths and tokens, deleted or skipped tests, size, shared files, environment variables, major dependency bumps, agent-intent only, and recorded conflicts.
 
 When `security-performance-check` is installed beside this skill, the same risk step also reads the hint columns of that skill's `references/security-signals.md` and `references/performance-signals.md` (path hints and content hints, for any language or framework), matches them on the diff's files and changed lines, and writes `separateTests` into `risk.json` with a ready command per hinted row (for example `/security-performance-check security`).
-A content hint alone is enough (a Django `redirect(request.GET["next"])` or a Blade `{!! $bio !!}` counts wherever the file lives), so path globs never drop the recommendation for server, auth, or render code; prose files such as `*.md` never count.
+A content hint on a changed line decides it (a Django `redirect(request.GET["next"])` or a Blade `{!! $bio !!}` counts wherever the file lives); prose files such as `*.md` never count.
+A path hint alone counts only for a file with no changed text (binary or mode-only) or a row with no content hints, because directory globs such as `**/app/**` match every file of some frameworks.
 Those signal files stay the single source of truth: this skill does not copy their rows.
 When the skill is not installed, `separateTests` in `risk.json` is empty and detection is skipped.
 The risk step writes each command without the target label; the report step appends that label when copying into `run.json`.
 A `risk.json` written before this signal detection existed has no `separateTests` key: with the skill installed, `report`/`evaluate` treats that as stale and requires re-running `risk`.
 
-- Gate required (any `high` or `gate` signal, or `--gate=always`): stop once and send one message that lists K1..Kn, the conflicts, the assumptions, and the flows you plan to test, with the signals that fired. The human confirms, edits, or picks conflict resolutions in that one answer.
+Before the gate, read `Status` and `Base instance` in `runtime-e2e-test/references/project-runtime.md`.
+When `Status` is not `READY`, say so in the gate message (or in chat when no gate is needed) and suggest `/runtime-e2e-test setup`; never rediscover the runtime silently.
+When `Base instance` is `BLOCKED` or missing, the gate message also states that no runtime case can prove it fails, so every `new-behavior` case will report `Can-fail: NOT_PROVEN`, with the recorded reason.
+
+Then run `validate_change.py gate <run-dir>`, whether or not the gate is required. It refuses unlabelled claims or a `contradicts` claim without its conflict, writes `gate.json` with the items it shows, and prints them.
+`report` refuses an item marked `confirmed: gate` that `gate.json` did not show as written: an item added after the gate needs `gate` again and another answer from the human.
+
+- Gate required (any `high` or `gate` signal, or `--gate=always`): stop once and send one message that lists every line `gate` printed (K1..Kn, the conflicts, the assumptions, and the PR claims that contradict or go beyond the request) and the flows you plan to test, with the signals that fired. The human confirms, edits, or picks conflict resolutions in that one answer.
   - Confirmed: set `confirmed: gate` on every assumption and agent-intent item, write the chosen item into each conflict's `resolution`, and record `answer: confirmed`.
   - Edited: apply the edits; an item the human adds is `source: prompt` with `sourceRef: gate`, their words as `quote`, and `confirmed: source`. Set `confirmed: gate` on every assumption and agent-intent item that remains, as for a confirmation, and record `answer: edited`.
   - No human can answer (a headless run): record `answer: no-human`, mark the three steps `SKIPPED` with `skip: no-human`, and report. The status is `NEEDS_HUMAN`; never continue on your own.
@@ -104,6 +122,9 @@ Load `review-pr` with the target, the base, and `expectations.json` as its inten
 Load `runtime-e2e-test` in light mode with `expectations.json` and `review.json`. Its cases come from three pillars:
 
 - Intent: at least one case per K, naming it in the case's `expects`. Derive cases from K, never from review findings or the implementer's summary.
+  The suite links `<run-dir>/expectations.json` in `expectations`; the report rejects a runtime bundle whose suite does not.
+  A K no case can reach goes in `notCovered` with the reason. When `validate` lists any, send the human one message naming each K and its reason before the first run, and add a case for any K they ask for; the report lists every `notCovered` K under `Giới hạn`.
+  A K that needs another server configuration than the suite's instance (a variable unset or set differently, another flag) is not one no case can reach: run it in an extra light suite whose `determinism.env` sets that configuration (it reaches the head and base instances), with the other K in its `notCovered` as "covered by the main suite", and list its bundle in the runtime step's `extraArtifacts`.
 - Regression: the impact map, `unchanged` items, and the review's flows, named in `flows`.
 - Edge cases: the blind-spot catalog and the review's suspicions that need runtime proof, named in `suspicions`.
 
@@ -111,6 +132,7 @@ A sweep difference is never yours to call expected.
 The report script accepts it only when it is the run's only open item, adds no console error, and each differing route is covered by a passing, proving case for an expectation the human confirmed (`confirmed` is `source` or `gate`); the report then lists it as a note with both screenshots.
 Route coverage does not prove the rest of the page, so the human still looks at the screenshots.
 Any other difference keeps the run at `NEEDS_REVIEW`.
+A K's coverage `FULL` means its cases pass; when the K is `added` or `modified` and none of its cases has can-fail `PROVEN` (no base, or a base that could not prove it), the report adds that K to `Giới hạn`.
 
 Skip this step with `skip: not-applicable` when the change has no runtime surface the skill supports, and say why.
 
@@ -118,7 +140,7 @@ While reading the run's traces and observations, note passive signals for `Cần
 
 ## 6. Independent audit (high risk only)
 
-Run `validate_change.py audit-input <run-dir>`, then start one subagent with a fresh context. Give it only `audit-input.json` and the runtime bundle path; never the PR description, the review, `run.json`, or your own summary.
+Run `validate_change.py audit-input <run-dir>`, then start one subagent with a fresh context. Give it only `audit-input.json` and the runtime bundle paths (the main bundle and each of `extraArtifacts`); never the PR description, the review, `run.json`, or your own summary.
 It reads each K and the evidence files and writes `audit.json`:
 
 ```json
@@ -132,7 +154,7 @@ It reads each K and the evidence files and writes `audit.json`:
 - `UNSUPPORTED`: evidence exists but does not establish the behavior.
 - `MISSING`: no evidence covers it.
 
-Evidence files are paths inside the bundle; the tool rejects anything else. If the runtime offers no subagent, record the audit step as `MISSING` and say so.
+Evidence files are paths inside the main bundle, or inside an extra bundle named by the entry's `bundle` (its `extraArtifacts` path); the tool rejects anything else. If the runtime offers no subagent, record the audit step as `MISSING` and say so.
 
 ## 7. Report
 
@@ -158,6 +180,7 @@ Write `run.json`:
 - Steps appear in this order, each once. The three specialist steps are required; record a missing skill as `MISSING`, never leave it out.
 - `security-performance-check` is optional and never changes the overall status. Record it as `MISSING` only when the skill is not installed. When it is installed, record `SKIPPED` with `skip: recommended` if `separateTests` is nonempty, or `skip: no-signal` if it is empty. Do not run the full check from this composite.
 - Start `separateTests` from `risk.json` (signal-file matches when the skill is installed). Append the target label to each ready command (for example `PR#12`). Add any extra passive runtime or accessibility notes that are not already covered. They are prompts for a human decision, never defects, and never change the status.
+- `extraArtifacts` on the `runtime-e2e-test` step lists the extra suites' bundles; their cases count toward each K, and a K one of them covers leaves `Giới hạn`.
 - `report` refuses a `run.json` that drops a `risk.json` match or records an installed `security-performance-check` as `MISSING`.
 
 Then run `validate_change.py report <run-dir>`.

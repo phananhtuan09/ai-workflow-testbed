@@ -36,6 +36,7 @@ REVIEW_STATUSES = {
     "Không thể đánh giá": "BLOCKED",
 }
 VERDICTS = ("SUPPORTED", "UNSUPPORTED", "CONTRADICTED", "MISSING")
+RELATIONS = ("matches", "contradicts", "beyond", "none")
 AREAS = ("security", "performance", "accessibility")
 # Worst wins: the overall status is the first of these that any section reaches.
 ORDER = ("NEEDS_HUMAN", "BLOCKED", "FAILED", "NEEDS_REVIEW", "PASSED")
@@ -138,7 +139,8 @@ def load_rules(path=RULES):
         limits = {"max-lines": int(settings.get("max-lines", "500")), "max-files": int(settings.get("max-files", "25"))}
     except ValueError:
         raise Inconsistent(f"{path}: max-lines and max-files must be integers") from None
-    return {"ignore": split("ignore"), "tests": split("tests"), "shared": split("shared"), **limits}, rules
+    return {"ignore": split("ignore"), "tests": split("tests"), "shared": split("shared"),
+            "delegation": [p.lower() for p in split("delegation")], **limits}, rules
 
 
 # ---------- diff ----------
@@ -164,12 +166,12 @@ def unquote(path):
     return out.decode("utf-8", "replace")
 
 
-def read_diff(root, base, worktree, untracked=None):
+def read_diff(root, base, worktree, untracked=None, head="HEAD"):
     """Files of the change with their added and removed lines, and whether each was deleted or renamed away.
 
     With `worktree`, untracked files count as added; `untracked` limits them to a list recorded earlier.
     """
-    ref = [base] if worktree else [f"{base}...HEAD"]
+    ref = [base] if worktree else [f"{base}...{head}"]
     text = git(root, "diff", "--no-color", "--no-renames", "--no-ext-diff", "-U0", *ref)
     files, current, header, old = {}, None, False, None
     for line in text.splitlines():
@@ -254,7 +256,9 @@ def diff_signals(files, settings, rules, versions):
             hits = [name for name in kept if rule["check"].search(name)]
         elif rule["scope"] in ("added", "removed", "changed"):
             sides = ("added", "removed") if rule["scope"] == "changed" else (rule["scope"],)
-            for name, change in kept.items():
+            # Line rules read application code; only rules about tests themselves read test files.
+            checked = {n: c for n, c in kept.items() if rule["id"].startswith("tests-") or not tests(n)}
+            for name, change in checked.items():
                 for side in sides:
                     hits += [f"{name}: {'+' if side == 'added' else '-'}{line.strip()[:120]}" for line in change[side] if rule["check"].search(line)]
         elif rule["check"] == "size":
@@ -306,10 +310,10 @@ def load_spc_checker():
 def separate_tests_from_signals(paths, changes=None):
     """Recommend security-performance-check from the changed code, in any language.
 
-    Every signal row is considered. A row is reported when a changed file hits one of its hints:
-    a path hint, or a content hint found in that file's added or removed lines (`changes`).
-    A content hit is enough on its own, so a narrow path glob can never hide server, auth, or
-    render code from the recommendation.
+    Every signal row is considered. A row is reported when a content hint is found in a changed
+    file's added or removed lines (`changes`), wherever the file lives. A path hint alone counts
+    only for a file with no changed text or a row with no content hints, because directory globs
+    such as `**/app/**` or `**/controllers/**` match whole frameworks regardless of the change.
     """
     checker = load_spc_checker()
     if checker is None:
@@ -322,7 +326,7 @@ def separate_tests_from_signals(paths, changes=None):
             ("performance", checker.load_performance_signals(SPC_PERFORMANCE_SIGNALS)),
         )
         for area, rows in tracks:
-            for row_id, hits in checker.hinted_paths(rows, path_list, changes).items():
+            for row_id, hits in checker.hinted_paths(rows, path_list, changes, content_required=True).items():
                 extra = f" +{len(hits) - 1}" if len(hits) > 1 else ""
                 entries.append({
                     "area": area,
@@ -341,26 +345,31 @@ def diff_changes(files):
     return {name: "\n".join(info["added"] + info["removed"]) for name, info in files.items()}
 
 
-def assess(root, base, worktree, expectations, rules_path, untracked=None):
+def assess(root, base, worktree, expectations, rules_path, untracked=None, head=None):
+    """`head` is the change's commit from the remote; without it the change is the checkout's HEAD."""
     settings, rules = load_rules(rules_path)
-    base_sha = git(root, "rev-parse", base if worktree else git(root, "merge-base", base, "HEAD").strip()).strip()
+    head = head or "HEAD"
+    base_sha = git(root, "rev-parse", base if worktree else git(root, "merge-base", base, head).strip()).strip()
 
     def versions(name):
-        after = (root / name).read_text(encoding="utf-8") if worktree and (root / name).is_file() else show(root, "HEAD", name)
+        after = (root / name).read_text(encoding="utf-8") if worktree and (root / name).is_file() else show(root, head, name)
         return show(root, base_sha, name), after
 
-    files, found = read_diff(root, base, worktree, untracked)
+    files, found = read_diff(root, base, worktree, untracked, head)
     signals, size = diff_signals(files, settings, rules, versions)
     signals += intent_signals(expectations, rules)
     levels = {s["level"] for s in signals}
     ignored = matcher(settings["ignore"])
-    kept_paths = [name for name in sorted(files) if not ignored(name)]
-    separate = separate_tests_from_signals(kept_paths, diff_changes(files))
+    tests = matcher(settings["tests"])
+    # Security and performance probes target application code, so test files give no signal.
+    code_paths = [name for name in sorted(files) if not ignored(name) and not tests(name)]
+    separate = separate_tests_from_signals(code_paths, diff_changes(files))
     return {
         "schema": "validate-change/risk@1",
         "base": base,
         "baseSha": base_sha,
-        "headSha": git(root, "rev-parse", "HEAD").strip(),
+        "headSha": git(root, "rev-parse", head).strip(),
+        **({"head": head} if head != "HEAD" else {}),
         "worktree": worktree,
         "untracked": found,
         "rulesDigest": hashlib.sha256(Path(rules_path).read_bytes()).hexdigest(),
@@ -422,6 +431,79 @@ def check_expectations(data):
     return known
 
 
+def split_description(text):
+    """One claim per non-empty line of the PR description, outside code fences; headings carry no claim."""
+    claims, fenced = [], False
+    for line in text.splitlines():
+        if line.strip().startswith("```"):
+            fenced = not fenced
+            continue
+        body = re.sub(r"^\s*(?:[-*+>]|\d+[.)]|\[[ xX]\])\s*", "", line).strip()
+        body = re.sub(r"^\[[ xX]\]\s*", "", body)
+        if fenced or not body or line.lstrip().startswith("#"):
+            continue
+        claims.append(body)
+    return claims
+
+
+def delegated(claim, phrases):
+    lowered = claim.lower()
+    return any(p in lowered for p in phrases)
+
+
+def fresh_claims(run_dir, phrases):
+    """The claim list as `claims` writes it, rebuilt from the stored description so labels cannot drift from it."""
+    source = run_dir / "pr-description.md"
+    if not source.is_file():
+        return []
+    return [{"id": f"D{n}", "text": t, "delegated": delegated(t, phrases)}
+            for n, t in enumerate(split_description(source.read_text(encoding="utf-8")), 1)]
+
+
+def check_claims(run_dir, expectations, phrases):
+    """Every sentence of the PR description is labelled; claims made on the human's behalf cannot be ignored."""
+    path = run_dir / "claims.json"
+    if not path.is_file():
+        raise Inconsistent("claims.json is missing; run `claims` on the PR description (or `claims --none` when the change has none) before the gate")
+    data = load(path)
+    if data.get("schema") != "validate-change/claims@1" or not isinstance(data.get("claims"), list):
+        raise Inconsistent("claims.json: schema validate-change/claims@1 with a claims list")
+    expected = fresh_claims(run_dir, phrases)
+    if [(c.get("id"), c.get("text")) for c in data["claims"]] != [(c["id"], c["text"]) for c in expected]:
+        raise Inconsistent("claims.json does not match pr-description.md; run claims again instead of editing the claim text")
+    items = {i["id"]: i for i in expectations["items"]}
+    in_conflict = {k for c in expectations.get("conflicts", []) for k in c["items"]}
+    unlabelled = [c["id"] for c in data["claims"] if c.get("relation") not in RELATIONS]
+    if unlabelled:
+        raise Inconsistent(f"claims.json: label every claim with relation {'|'.join(RELATIONS)}: {', '.join(unlabelled)}")
+    for claim, fresh in zip(data["claims"], expected):
+        where = f"claims.json {claim['id']}"
+        k_refs = refs(claim.get("kRefs", []), set(items), where)
+        relation = claim["relation"]
+        if fresh["delegated"] and relation == "none":
+            raise Inconsistent(f"{where}: the claim speaks for the human (\"{claim['text'][:80]}\"), so it matches, contradicts, or goes beyond a K; it is never none")
+        human = [k for k in k_refs if items[k]["source"] in ("prompt", "spec")]
+        own = [k for k in k_refs if items[k]["source"] == "agent-intent" and items[k]["sourceRef"].startswith("pr-description")]
+        if relation == "matches" and not (human if fresh["delegated"] else k_refs):
+            raise Inconsistent(f"{where}: matches names the K it matches" + (", a prompt or spec item, since the claim speaks for the human" if fresh["delegated"] else ""))
+        if relation in ("contradicts", "beyond") and not own:
+            raise Inconsistent(f"{where}: {relation} names the agent-intent item (sourceRef pr-description) that records the claim")
+        if relation == "contradicts" and not any(k in in_conflict for k in own):
+            raise Inconsistent(f"{where}: contradicts needs a conflict between its agent-intent item and the K it contradicts, so the gate shows it")
+    return data["claims"]
+
+
+def check_gate_record(run_dir, items):
+    """Items confirmed at the gate must be the ones the gate showed; nothing added later counts as confirmed."""
+    path = run_dir / "gate.json"
+    if not path.is_file():
+        raise Inconsistent("gate.json is missing; run `gate` before asking the human or running checks")
+    shown = {e.get("id"): e.get("statement") for e in load(path).get("shown", [])}
+    unseen = [i["id"] for i in items if i["confirmed"] == "gate" and shown.get(i["id"]) != i["statement"]]
+    if unseen:
+        raise Inconsistent(f"{', '.join(unseen)} confirmed: gate, but the gate did not show them as written; run gate again and ask the human")
+
+
 def check_run(data):
     if data.get("schema") != "validate-change/run@1" or not isinstance(data.get("target"), dict) or not text(data["target"].get("label")):
         raise Inconsistent("run.json: schema validate-change/run@1 with target.label")
@@ -443,6 +525,10 @@ def check_run(data):
             raise Inconsistent(f"{where}: a skipped step names skip ({'|'.join(SKIPS)}) and a reason")
         if step["status"] == "RAN" and step["skill"] not in ("quality-code-check", "security-performance-check") and not text(step.get("artifact")):
             raise Inconsistent(f"{where}: a step that ran names its artifact")
+        extra = step.get("extraArtifacts", [])
+        if extra and (step["skill"] != "runtime-e2e-test" or step["status"] != "RAN" or not isinstance(extra, list)
+                      or any(not text(a) for a in extra) or len(set(extra)) != len(extra) or step.get("artifact") in extra):
+            raise Inconsistent(f"{where}: extraArtifacts lists further runtime bundles of a runtime-e2e-test step that ran, each once")
     checks = named["quality-code-check"].get("checks", [])
     if named["quality-code-check"]["status"] == "RAN" and (not isinstance(checks, list) or not checks or any(
             c.get("kind") not in CHECK_KINDS or not text(c.get("command")) or not isinstance(c.get("exit"), int) or isinstance(c.get("exit"), bool) for c in checks)):
@@ -507,7 +593,8 @@ def check_review(data, known, items, head):
         raise Inconsistent(f"review.json: unconfirmed agent-intent items need a human question: {', '.join(unasked)}")
 
 
-def check_audit(data, known, bundle):
+def check_audit(data, known, bundles):
+    """bundles maps None to the main runtime bundle and each extraArtifacts path to its bundle; evidence names one with `bundle`."""
     if data.get("schema") != "validate-change/audit@1" or not isinstance(data.get("verdicts"), list):
         raise Inconsistent("audit.json: schema validate-change/audit@1 with verdicts")
     named = [v.get("k") for v in data["verdicts"]]
@@ -520,9 +607,10 @@ def check_audit(data, known, bundle):
         if verdict["verdict"] in ("SUPPORTED", "CONTRADICTED") and not verdict["evidence"]:
             raise Inconsistent(f"{where}: {verdict['verdict']} cites the evidence it rests on")
         for entry in verdict["evidence"]:
+            bundle = bundles.get(entry.get("bundle"))
             target = (bundle / str(entry.get("file", ""))).resolve() if bundle else None
             if not bundle or not text(entry.get("file")) or not text(entry.get("locator")) or bundle.resolve() not in target.parents or not target.is_file():
-                raise Inconsistent(f"{where}: evidence names a file inside the runtime bundle and a locator")
+                raise Inconsistent(f"{where}: evidence names a file inside the runtime bundle (or the extra bundle its `bundle` names) and a locator")
     return {v["k"]: v for v in data["verdicts"]}
 
 
@@ -540,6 +628,12 @@ def runtime_status(bundle, known, confirmed, review, head):
     if manifest.get("gitHead") != head:
         raise Inconsistent(f"runtime bundle ran on {manifest.get('gitHead')}, not the reviewed head {head}; run it again")
     suite = load(bundle / "inputs" / manifest["suite"])
+    # The runtime tool enforces that each K has a case or a notCovered reason only when the suite links the list.
+    linked = suite.get("expectations")
+    if not isinstance(linked, str) or not (bundle / "inputs" / linked).is_file():
+        raise Inconsistent(f"runtime suite {manifest['suite']} must link expectations.json in `expectations`, so every K has a case or a notCovered reason")
+    if sorted(i.get("id") for i in load(bundle / "inputs" / linked).get("items", [])) != sorted(known):
+        raise Inconsistent(f"runtime suite {manifest['suite']} ran against a different expectation list; run it again")
     # Without a review there is no handoff to check flow and suspicion references against.
     flows = {f["id"] for f in review.get("flows", [])} if review else None
     suspicions = {s["id"] for s in review.get("suspicions", [])} if review else None
@@ -556,7 +650,26 @@ def runtime_status(bundle, known, confirmed, review, head):
     line = next((l for l in audited.stdout.splitlines() if l.startswith("Audit:")), "Audit: no line")
     notes = intent_sweep_notes(line, results, cases, suite, confirmed) if audited.returncode == 1 else []
     status = "FAILED" if failed else "BLOCKED" if blocked else "NEEDS_REVIEW" if audited.returncode and not notes else "PASSED"
-    return {"status": status, "audit": line, "cases": cases, "failed": failed, "blocked": blocked, "notes": notes}
+    return {"status": status, "audit": line, "cases": cases, "failed": failed, "blocked": blocked, "notes": notes,
+            "notCovered": suite.get("notCovered", [])}
+
+
+def merge_runtime(parts, names):
+    """One runtime result from the main bundle and the extra bundles that run cases needing another server configuration."""
+    if len(parts) == 1:
+        return parts[0]
+    label = lambda i, ident: ident if i == 0 else f"{names[i]}/{ident}"
+    cases = [{**c, "id": label(i, c["id"])} for i, p in enumerate(parts) for c in p["cases"]]
+    covered = {k for c in cases for k in c["expects"]}
+    not_covered = []
+    for part in parts:
+        # An extra suite declares the main suite's K as not covered; a K some case reaches is covered.
+        not_covered += [e for e in part["notCovered"] if e["k"] not in covered and e["k"] not in {x["k"] for x in not_covered}]
+    return {"status": next(s for s in ORDER if any(p["status"] == s for p in parts)),
+            "audit": "; ".join(p["audit"] if i == 0 else f"{names[i]}: {p['audit']}" for i, p in enumerate(parts)),
+            "cases": cases, "failed": [label(i, x) for i, p in enumerate(parts) for x in p["failed"]],
+            "blocked": [label(i, x) for i, p in enumerate(parts) for x in p["blocked"]],
+            "notes": [n for p in parts for n in p["notes"]], "notCovered": not_covered}
 
 
 def intent_sweep_notes(line, results, cases, suite, confirmed):
@@ -596,11 +709,11 @@ def evaluate(root, run_dir, rules_path):
     known = check_expectations(expectations)
     items = expectations["items"]
     risk = load(run_dir / "risk.json")
-    head = git(root, "rev-parse", "HEAD").strip()
+    head = git(root, "rev-parse", risk.get("head", "HEAD")).strip()
     if risk.get("headSha") != head:
-        raise Inconsistent(f"risk.json was computed for {risk.get('headSha')}, but HEAD is {head}; run risk again")
+        raise Inconsistent(f"risk.json was computed for {risk.get('headSha')}, but {risk.get('head', 'HEAD')} is {head}; run risk again")
     # Light tests written after the risk step are untracked too, so only the files recorded then are compared.
-    fresh = assess(root, risk["base"], risk["worktree"], expectations, rules_path, risk.get("untracked", []))
+    fresh = assess(root, risk["base"], risk["worktree"], expectations, rules_path, risk.get("untracked", []), risk.get("head"))
     rules = load_rules(rules_path)[1]
     intent_ids = {r["id"] for r in rules if r["scope"] == "builtin" and r["check"] in INTENT_BUILTINS}
     diff_only = lambda r: [s for s in r["signals"] if s["rule"] not in intent_ids]
@@ -639,6 +752,8 @@ def evaluate(root, run_dir, rules_path):
         if gate["answer"] is not None:
             raise Inconsistent("The gate was not required, so run.json records no gate answer")
         mode = "STRAIGHT-THROUGH"
+    claims = check_claims(run_dir, expectations, load_rules(rules_path)[0]["delegation"])
+    check_gate_record(run_dir, items)
     unconfirmed = [i["id"] for i in items if i["confirmed"] == "none"]
     if mode == "CONFIRMED" and unconfirmed:
         raise Inconsistent(f"The human confirmed the list at the gate; mark {', '.join(unconfirmed)} confirmed: gate")
@@ -688,21 +803,32 @@ def evaluate(root, run_dir, rules_path):
         if status != "PASSED":
             sections.append((status, f"review-pr: {review['status']}"))
 
-    runtime, bundle = None, None
+    runtime, bundles = None, {}
     if steps["runtime-e2e-test"]["status"] == "RAN":
-        bundle = root / steps["runtime-e2e-test"]["artifact"]
-        runtime = runtime_status(bundle, known, {i["id"] for i in items if i["confirmed"] != "none"}, review, head)
+        step = steps["runtime-e2e-test"]
+        bundles = {None: root / step["artifact"], **{a: root / a for a in step.get("extraArtifacts", [])}}
+        confirmed = {i["id"] for i in items if i["confirmed"] != "none"}
+        runtime = merge_runtime([runtime_status(b, known, confirmed, review, head) for b in bundles.values()],
+                                [Path(a).name for a in [step["artifact"], *step.get("extraArtifacts", [])]])
         if runtime["status"] != "PASSED":
             sections.append((runtime["status"], f"runtime-e2e-test: {runtime['audit']}"))
     covered = {i["id"]: coverage(i["id"], runtime["cases"]) if runtime else ("NOT_RUN", []) for i in items}
     thin = [k for k, (level, _) in covered.items() if level in ("NONE", "PARTIAL")]
+    if runtime:
+        # FULL counts passing cases; for an added or modified behavior it does not say a case could fail without the change.
+        unproven = [i["id"] for i in items if i["change"] in ("added", "modified") and covered[i["id"]][0] == "FULL"
+                    and not any(c["proof"] == "PROVEN" for c in runtime["cases"] if i["id"] in c["expects"])]
+        for entry in runtime["notCovered"]:
+            limits.append(f"{entry['k']}: không có case runtime; lý do: {entry['reason']}")
+        if unproven:
+            limits.append(f"{', '.join(unproven)}: coverage FULL chỉ nghĩa là case pass; chưa case nào chứng minh được là sẽ fail nếu thiếu thay đổi (can-fail chưa PROVEN).")
     if runtime and thin:
         sections.append(("NEEDS_REVIEW", f"kỳ vọng chưa được chứng minh đủ ở runtime: {', '.join(thin)}"))
 
     audit_step = steps.get("audit")
     verdicts = {}
     if audit_step and audit_step["status"] == "RAN":
-        verdicts = check_audit(load(root / audit_step["artifact"]), known, bundle)
+        verdicts = check_audit(load(root / audit_step["artifact"]), known, bundles)
         contradicted = [k for k, v in verdicts.items() if v["verdict"] == "CONTRADICTED"]
         weak = [k for k, v in verdicts.items() if v["verdict"] in ("UNSUPPORTED", "MISSING")]
         if contradicted:
@@ -727,7 +853,8 @@ def evaluate(root, run_dir, rules_path):
 
     overall = next(s for s in ORDER if s == "PASSED" or any(level == s for level, _ in sections))
     return {"expectations": expectations, "risk": risk, "run": run, "steps": steps, "mode": mode, "review": review, "runtime": runtime,
-            "covered": covered, "verdicts": verdicts, "sections": sections, "limits": limits, "overall": overall, "humanIntent": bool(human)}
+            "covered": covered, "verdicts": verdicts, "sections": sections, "limits": limits, "overall": overall, "humanIntent": bool(human),
+            "claims": claims}
 
 
 def markdown(state):
@@ -764,6 +891,9 @@ def markdown(state):
     conflicts = state["expectations"].get("conflicts", [])
     if conflicts:
         lines += ["", "## Xung đột", ""] + [f"- {c['id']} ({', '.join(c['items'])}): {c['summary']} — {'chưa giải quyết' if c['resolution'] == 'unresolved' else 'human chọn ' + c['resolution']}" for c in conflicts]
+    flagged = [c for c in state["claims"] if c["relation"] in ("contradicts", "beyond")]
+    if flagged:
+        lines += ["", "## Đối chiếu mô tả PR", ""] + [f"- {c['id']} ({'mâu thuẫn với yêu cầu' if c['relation'] == 'contradicts' else 'ngoài yêu cầu'}; {', '.join(c['kRefs'])}): {c['text']}" for c in flagged]
     review, runtime = state["review"], state["runtime"]
     if review:
         tested = lambda key, ident: runtime and any(ident in c[key] for c in runtime["cases"])
@@ -790,21 +920,71 @@ def main(argv=None):
     risk.add_argument("run_dir")
     risk.add_argument("--base", required=True, help="base ref; the change is base...HEAD, or base..working tree with --worktree")
     risk.add_argument("--worktree", action="store_true", help="include uncommitted changes")
-    for name in ("audit-input", "report"):
+    risk.add_argument("--head", help="the change's commit SHA from `evidence.py refs`; the change is base...head, whatever the checkout holds")
+    claims = sub.add_parser("claims", help="split the PR description into claims.json for labelling")
+    claims.add_argument("run_dir")
+    described = claims.add_mutually_exclusive_group(required=True)
+    described.add_argument("--description", help="a file holding the PR description as the implementer wrote it")
+    described.add_argument("--none", action="store_true", help="the change has no description")
+    for name in ("gate", "audit-input", "report"):
         sub.add_parser(name).add_argument("run_dir")
     for command in sub.choices.values():
         command.add_argument("--rules", default=str(RULES))
     args = parser.parse_args(argv)
+    if getattr(args, "head", None) and args.worktree:
+        parser.error("--head names a commit on the remote; --worktree is for a change only the checkout has")
     run_dir = Path(args.run_dir)
     try:
         root = Path(git(Path.cwd(), "rev-parse", "--show-toplevel").strip())
         expectations = load(run_dir / "expectations.json")
         check_expectations(expectations)
         if args.command == "risk":
-            result = assess(root, args.base, args.worktree, expectations, args.rules)
+            result = assess(root, args.base, args.worktree, expectations, args.rules, head=args.head)
             write(run_dir / "risk.json", result)
             separate = ", ".join(f"{e['area']}:{e['signal'].split(':', 1)[0]}" for e in result["separateTests"]) or "none"
             print(f"Gate: {result['gate']}; audit: {result['audit']}; signals: {', '.join(s['rule'] for s in result['signals']) or 'none'}; separateTests: {separate}")
+            return 0
+        if args.command == "claims":
+            phrases = load_rules(args.rules)[0]["delegation"]
+            previous = {}
+            if (run_dir / "claims.json").is_file():
+                previous = {c.get("text"): c for c in load(run_dir / "claims.json").get("claims", [])}
+            if args.none:
+                (run_dir / "pr-description.md").unlink(missing_ok=True)
+            else:
+                try:
+                    described_text = Path(args.description).read_text(encoding="utf-8")
+                except OSError as error:
+                    raise Inconsistent(f"--description: {error}") from None
+                (run_dir / "pr-description.md").write_text(described_text, encoding="utf-8")
+            listed = fresh_claims(run_dir, phrases)
+            for claim in listed:
+                kept = previous.get(claim["text"], {})
+                claim["relation"], claim["kRefs"] = kept.get("relation"), kept.get("kRefs", [])
+            write(run_dir / "claims.json", {"schema": "validate-change/claims@1", "claims": listed})
+            for claim in listed:
+                print(f"{claim['id']}{' [speaks for the human]' if claim['delegated'] else ''}: {claim['text']}")
+            print(f"Label each claim in claims.json: relation {'|'.join(RELATIONS)} and kRefs." if listed else "No description: nothing to label.")
+            return 0
+        if args.command == "gate":
+            risk_data = load(run_dir / "risk.json")
+            claims_list = check_claims(run_dir, expectations, load_rules(args.rules)[0]["delegation"])
+            items = expectations["items"]
+            write(run_dir / "gate.json", {"schema": "validate-change/gate@1", "headSha": risk_data["headSha"],
+                                          "shown": [{"id": i["id"], "statement": i["statement"]} for i in items]})
+            # Conflicts recorded after the risk step still require the gate.
+            signals = risk_data["signals"] + [s for s in intent_signals(expectations, load_rules(args.rules)[1])
+                                              if s["rule"] not in {x["rule"] for x in risk_data["signals"]}]
+            required = "required" if any(s["level"] in ("high", "gate") for s in signals) else "not-required"
+            print(f"Gate: {required}; signals: {', '.join(s['rule'] for s in signals) or 'none'}")
+            for i in items:
+                print(f"- {i['id']} ({i['source']}{', ' + i['default'] if i['source'] == 'assumption' else ''}): {i['statement']}")
+            for c in expectations.get("conflicts", []):
+                print(f"- {c['id']} ({', '.join(c['items'])}): {c['summary']}")
+            for c in claims_list:
+                if c["relation"] in ("contradicts", "beyond"):
+                    print(f"- PR {c['id']} {c['relation']} ({', '.join(c['kRefs'])}): {c['text']}")
+            print("Show every line above in the gate message." if required == "required" else "No gate is required; run straight through.")
             return 0
         if args.command == "audit-input":
             risk_data = load(run_dir / "risk.json")

@@ -72,6 +72,9 @@ Paths below are relative to the project root; suite files live beside the Markdo
 }
 ```
 
+`command` runs in the project root, or in `cwd` when the suite sets it: a directory relative to the root, for a test project nested below it (for example `"cwd": "verify/e2e"` with `"command": ["npx", "--no-install", "playwright", "test", "specs/orders.spec.ts"]`).
+`files`, `plan`, and every other path stay relative to the root; on base the command runs in the same directory of the base worktree.
+
 `classification` is `new-behavior` (default; the case must fail on base) or `invariant` (expected to pass on base too).
 Include at least one `invariant` case when declaring a base: invariant cases double as a base health probe, and if none of them passes on base the base run is treated as degraded.
 A `pr-test` case runs a test the change itself added or modified, matched by file and title; it needs no tag or observations and its PASS is a native result only.
@@ -85,6 +88,13 @@ A suite needs at least one runtime case besides `pr-test` and `sweep` cases.
 A durable suite needs `approve` before `run`. A light suite lives with its plan outside `docs/testing/`, refuses `approve`, and runs without approval; its bundle records `approval.json` as `{"mode": "light", "reviewer": null}` with the hashes of what ran, and the audit accepts that only for a light suite.
 Before every run the tool checks the suite's env values and files for production-like hosts (anything but loopback, `.localhost`, `.local`, `.test`, `.internal`), real-looking credentials (live API keys, cloud access keys, tokens, private keys), shared stage hosts (`staging`, `dev`, `qa`, private networks), and credential-named variables with values. It stores the result as `environmentCheck` in `run-manifest.json`.
 In a light run a strong signal (production-like host, real-looking credential) stops the run before anything executes; rerun with `--confirm-environment` only after the human confirms, and the confirmation is recorded. Weak signals are listed among the limits. A durable run records the same check without stopping, because the human approved its environment.
+
+## Expectations
+
+`expectations` names an expectation list (`validate-change/expectations@1`, relative to the project root) when one exists, such as the `expectations.json` that `validate-change` supplies.
+With it, every K in the list must be named in some case's `expects`, or declared in `notCovered` as `{"k": "K5", "reason": "needs a data set the local stack cannot load"}`.
+`validate` and `run` reject a K that is neither, a K named in both, and an `expects` entry the list does not have; `validate` prints each `notCovered` K with its reason so the human hears about the gap before any case runs.
+The list is snapshotted with the other inputs, so editing it after a run makes that run stale.
 
 ## Blind spots
 
@@ -137,12 +147,109 @@ A check with no `actual` value is reported by name as unmeasured: the case is a 
 `base` is optional.
 When present, `run` creates a detached worktree at `base.revision`, copies the approved `files` from the snapshot over it except those named in `keep`, runs each `setup` step there, then runs the same `command` with `base.env` added.
 The tests therefore come from head and only the application comes from base; keep application code out of `files`, and list in `keep` any dependency manifest or lockfile that must stay at its base version.
-`base.env` is required and must give the base instance its own ports and data so the two instances share no mutable state; setup steps and the test command both receive it.
+`base.env` must give the base instance its own ports and data so the two instances share no mutable state; setup steps and the test command both receive it.
+It may be left out when the suite declares an `instance`.
 Setup must reproduce what the head run relies on (dependencies, seed data, fixtures) so a base failure reflects the behavior rather than a missing prerequisite.
 The rest of the environment is inherited as for the head run, so every shared or stateful endpoint the app reads must be overridden there.
 `base.env` values are snapshotted into the bundle: use non-secret values only.
 Setup steps run with a 30-minute timeout and log both output streams to `base/setup.log`.
 The worktree is removed after the run and the outcome is recorded as `worktreeCleanup` in `base/run-manifest.json`.
+
+## Head and served instance
+
+Resolve both revisions with `scripts/evidence.py refs --source <branch or pull/<n>/head> --into <target branch>`; it fetches from `origin` (`--remote` to change it) and prints the head commit and the merge base as full SHAs, so a stale local branch never decides what is tested.
+For a change that is not on the remote yet, `refs --local --into <target branch>` gives the checkout's `HEAD` and marks `uncommitted` when the checkout has edits.
+Copy its `head` object into the suite's `head` and its base revision into `base.revision`.
+
+```json
+{
+  "instance": "project-runtime",
+  "head": {"revision": "<40-hex SHA>", "source": "origin/feature"},
+  "base": {"revision": "<40-hex SHA>"}
+}
+```
+
+`instance` is `"project-runtime"`: the tool reads the recipe under `## Base instance` in the installed project runtime reference, which `scripts/setup.py fill` writes from a proven setup run, and refuses the suite when that section is not `READY`.
+An inline recipe object is accepted too, for example in a fixture.
+Approval pins the recipe it read; editing it in the reference makes the approval stale, and the bundle keeps the recipe used as `instance.json`.
+
+With `head`, `run` tests no file of the checkout: it creates a head worktree at `head.revision`, and with `"uncommitted": true` (allowed only when `head.revision` is the checkout's `HEAD`) applies the checkout's `git diff --binary HEAD` and copies its untracked files once, keeping the patch as `head.patch`.
+Each worktree, head and base, then gets the approved test files from the snapshot, the recipe's `copy` files from the checkout (for example `.env`, never read), and the recipe's `setup` steps, run in the recipe `cwd` as `setup.py prove` runs them (after `base.setup`, which runs in the worktree root, on base).
+The tool starts `start` there, waits up to `timeout` seconds for `ready` (`{"url": ...}` answering below 500, or `{"log": <regex>}` in its log), runs the tests and the existing suites, runs `stop` (or terminates the start process group), and records whether the ports were released.
+Head and base run one after the other, and both worktrees are removed afterwards (`worktreeCleanup`).
+A head that cannot be built or never becomes ready stops the run with the reason; a base that never becomes ready degrades the base run with the reason and the log in `base/instance.log`.
+
+`resources` is the human's choice at setup:
+
+- `shared`: each worktree instance uses the local stack's ports, database, and services, so it runs only while the local stack is stopped. A suite with `base` must then declare `head` too, and `run` stops before anything runs when a port is in use, naming it, or when another shared run holds the repository's lock.
+- `isolated`: each instance gets fresh ports, and `env` (with `{NAME}` and `{tree}` placeholders) gives it its own data, beside the running local stack.
+
+With `identity` in the recipe, each instance must print the token the tool writes to `.runtime-e2e-identity` in its worktree once it is ready; a mismatch fails that instance like a missing ready signal.
+
+`shares` names what an instance shares with the local stack (database, queues, storage); keep the run marker and lock rules from the reference's `## Parallel execution` for each of them.
+Without `head`, the head run uses the checkout and whatever stack is already running, as before.
+
+## Exploration
+
+A suite with `head` and a `browser` case needs an exploration of that head before its first run: tests are written from what the served page shows, not from source.
+Write an exploration file outside `docs/testing`, for example next to the light suite:
+
+```json
+{
+  "head": {"revision": "<40-hex SHA>", "source": "origin/feature"},
+  "instance": "project-runtime",
+  "baseURL": "http://localhost:{WEB_PORT}",
+  "writes": true,
+  "env": {"TZ": "UTC"},
+  "flows": [
+    {"id": "admin-confirm", "viewport": {"width": 320, "height": 640}, "locale": "vi-VN", "steps": [
+      {"request": {"method": "POST", "path": "/api/test/reset"}},
+      {"goto": "/login"},
+      {"fill": {"label": "Email"}, "value": "admin@example.test"},
+      {"click": {"role": "button", "name": "Sign in"}},
+      {"goto": "/orders/2"},
+      {"click": {"role": "button", "name": "Confirm"}},
+      {"waitFor": {"text": "Sent"}},
+      {"reload": true}
+    ]}
+  ]
+}
+```
+
+- `head` and `instance` are the suite's; `env` is the suite's `determinism.env`, so the explored app is configured as the run's.
+- `baseURL` names the app's URL with the recipe's port variables.
+- `writes` is `true` in light mode. Before approval in durable mode it is `false`: every request other than GET, HEAD, and OPTIONS is blocked and listed.
+  A GET that changes data (a logout link, a confirm link with a token) and WebSocket messages still reach the app, so such a step does not belong in a read-only flow.
+  With shared resources a write reaches the local stack's data, as a run's does.
+- A flow starts with `goto` and walks one user path to every state a case asserts on: each step is `goto` (a path), `click`, `fill` and `select` (with `value`), `check`, `press` (with `key`), `waitFor`, or `reload: true`.
+  Flows run one after another on the same app data, so a flow after one that changes data starts with the reset the project's test fixtures use, as `{"request": {"method": "POST", "path": "/api/test/reset"}}` before its `goto`; with `writes: false` such a request is blocked and listed.
+  A target is one of `{"role", "name"}`, `label`, `text`, `placeholder`, `testId`, `title`, or `altText`, with `exact` when the test will use it: the same locator the test will use.
+- Explore each locale and viewport whose text or layout a case asserts.
+
+```bash
+python3 <skill-root>/scripts/evidence.py explore <explore.json> --root <project> --out <new-directory>
+```
+
+`explore` serves the head worktree from the recipe, as `run` does (the shared-resources lock and port check included), and drives each flow in Chromium with the project's own Playwright.
+After each step it waits until no request has been in flight for 300 ms, then records the URL, the accessibility snapshot (the roles and names `getByRole` matches), test IDs, placeholders, titles, image alt texts, each select's option values, the requests the step made with their status, console errors, and blocked writes.
+A target must match exactly one visible element within 5 seconds, as a strict Playwright locator does; hidden matches, such as an option inside a closed select, count too.
+Otherwise the flow fails at that step with what matched (nothing, only hidden elements, or several), and the output names what the page shows instead, such as the buttons that exist.
+Values typed into a field whose target names a password, secret, token, key, OTP, or PIN, and the project's secret values, are replaced with `[REDACTED]`.
+It writes `record.json`, the flows as run in `explore.json`, and the instance and setup logs, and exits 1 when a flow failed.
+Fix the flow and explore again until every flow passes, then write the tests from the record.
+
+List each record in the suite's `explore` (a path or a list of paths).
+`validate` and `run` then refuse the suite when:
+
+- a record explored another commit than `head.revision`;
+- a literal locator in a listed test or helper file (`getByRole` with its `name`, `getByLabel`, `getByText`, `getByPlaceholder`, `getByTestId`, `getByTitle`, `getByAltText`) appears in no recorded step, compared case-insensitively as a substring, the way Playwright matches by default.
+  The check proves that the text was shown somewhere on that step, not that the locator matches one element; the run proves that.
+  A role's name is compared with the accessibility snapshot line, so a name computed differently there (such as from `aria-describedby`) can be refused and goes in `unexplored`.
+
+The change's own tests (`pr-test` files) are not checked.
+A locator for a state no flow can reach, such as an error only a failing partner service shows, goes in `unexplored` as `{"locator": "<as the refusal prints it>", "reason": "..."}`; the human sees it in the suite.
+`validate` counts the locators built at runtime (a variable, a template with `${}` as the target or the role's name, a regular-expression name), which it cannot check.
+Records are hashed with the suite, so approval pins them and the run bundle keeps them under `inputs/`.
 
 ## Determinism
 
@@ -157,7 +264,8 @@ Copy its settings from the project runtime reference.
 
 `existing` lists the project's own test suites (unit, integration, e2e), copied from the project runtime reference.
 A suite with a `base` must declare it; when the project has no suites of its own, write `"existing": {"suites": [], "reason": "<why>"}`.
-`run` runs each suite on head in the project root and on base in the base worktree, after putting every file it copied from the head snapshot back to its base version, so each revision runs its own tests. Base runs also receive `base.env`; neither receives `determinism.env`.
+Without a `base` it still runs them on head only: a passing suite is `PASS` ("no usable base run"), and a failing one is `NOT_COMPARABLE`, since head failures cannot be told apart from earlier ones.
+`run` runs each suite on head in the project root (or the head worktree) and on base in the base worktree, after putting every file it copied from the head snapshot back to its base version, so each revision runs its own tests. Base runs also receive `base.env`; neither receives `determinism.env`.
 Write `{report}` where the suite takes its JUnit XML output path, in an argument or an `env` value; the tool replaces it with a file in the bundle.
 With a report the tool compares each test; without one it compares exit codes only.
 Tests in one of the suite's `files` whose name carries one of the plan's case tags (`[E2E-01]`) are left out: the plan's own cases are judged as cases. Tagged tests in other files, such as earlier plans' committed specs, stay existing tests.
@@ -182,6 +290,8 @@ Each suite gets one status:
 
 When the app has no server-side clock control, freeze browser time in the test with `page.clock.setFixedTime()` or `page.clock.install()` and say so in `limits` if server time still varies.
 Read rendered values only after a web-first assertion (for example `await expect(row).toBeVisible()`) has confirmed the data loaded; `innerText()` and `textContent()` do not wait for data and make results timing-dependent.
+The same holds for `count()`, `isVisible()` and `allInnerTexts()`: first wait for the state the value describes, such as the toast or the loaded rows, not only for the page around it, because a heading often renders while the list is still loading.
+An absence check needs the same wait: confirm that a sibling row is visible before counting a button that should be missing, or the count can be 0 only because nothing has loaded yet.
 
 List every executed local dependency in `files`, including helpers, fixture modules, configs, dependency manifests/lockfiles, and approved baselines.
 Use one test per case, titled `[E2E-01] descriptive title`.
@@ -287,6 +397,7 @@ Declared expectations are human-reviewed semantics; the tool cannot infer whethe
 ## Commands
 
 ```bash
+python3 <skill-root>/scripts/evidence.py explore <explore.json> --root <project> --out <new-directory>
 python3 <skill-root>/scripts/evidence.py validate <suite.json> --root <project>
 # Durable mode, only after explicit human approval, never as an agent's own decision:
 python3 <skill-root>/scripts/evidence.py approve <suite.json> --root <project> --reviewer <human-id>
