@@ -1,86 +1,86 @@
 # Project Runtime E2E Reference
 
-This file is a project-local operational reference. Complete it after installing the
-skill, keep commands and paths current, and never store secret values here.
+This file is a project-local operational reference.
+Run `/runtime-e2e-test setup` after installing the skill: it proves the runtime and fills the proven fields, then review the rest.
+Keep commands and paths current, and never store secret values here.
 
-- Status: READY
-- Maintainer: phananhtuan09
-- Last verified: 2026-11-06
-- Setup evidence: `/home/user/ai-workflow-testbed/.runtime-e2e/setup/main`, `/home/user/ai-workflow-testbed/.runtime-e2e/setup/base`
-- Applies to: Order Desk (`main`), Node 22, Playwright 1.63.0
-- Setup sample: `curl -fsS http://localhost:5173/api/health`
+- Status: UNCONFIGURED
+- Maintainer: —
+- Last verified: —
+- Applies to: —
 
-Use `Status: READY` only after the preflight commands and environment assumptions
-below have been verified in this project.
+`Status` is `UNCONFIGURED`, `READY` (setup proved the main stack from executed evidence), or `BLOCKED — <step>: <reason>`.
+Never set `READY` by hand for a command that was not executed.
 
 ## Runtime topology
 
-Playwright's `webServer` (in `playwright.config.ts`) starts both services through `npm run dev` and stops them when the run ends.
+List only services required for runtime E2E verification.
 
 | Service | Working directory | Start command | Ready signal | Stop/reset command | Log location |
 | --- | --- | --- | --- | --- | --- |
-| `order-desk` | `.` | `npm run dev` | url `http://localhost:{WEB_PORT}/api/health` | terminate the start process group | `start.log` in the setup evidence |
+| `<web>` | `<path>` | `<command>` | `<URL, port, or log pattern>` | `<command>` | `<path or command>` |
+| `<api>` | `<path>` | `<command>` | `<URL, port, or log pattern>` | `<command>` | `<path or command>` |
 
 ## Environment
 
-- Runtime profile: isolated local; JSON file database under `DATA_DIR`.
-- Environment file or setup command: `.env.example` documents variables; `playwright.config.ts` sets them for e2e runs.
-- Required variable names: `API_PORT`, `WEB_PORT`, `DATA_DIR`, `TEST_MODE`, `FIXED_NOW`.
-- Secret acquisition method: none required; fixture accounts are seeded test accounts.
-- Allowed external dependencies: none.
-- Prohibited targets: any host other than `localhost`.
-- Configuration identity to record in plans: git commit of this repository, Node version, Playwright version, `FIXED_NOW` value.
+- Runtime profile: `<local, staging, isolated test environment, etc.>`
+- Environment file or setup command: `<path or command>`
+- Required variable names: `<names only; never values>`
+- Secret acquisition method: `<approved secret manager or human-provided session>`
+- Allowed external dependencies: `<services that may be contacted>`
+- Prohibited targets: `<production or shared environments that must not be used>`
+- Configuration identity to record in plans: `<version, profile, image tag, etc.>`
 
 ## Existing E2E entrypoints
 
-- Full-suite command: `npx --no-install playwright test`
-- Focused-case command/filter: `npx --no-install playwright test <file> --project=desktop`
-- Browser harness: `playwright.config.ts`, `@playwright/test` 1.63.0, projects `desktop` (Desktop Chrome) and `mobile` (Pixel 7).
-- Runtime artifacts produced by the harness: `test-results/`, `playwright-report/` (both gitignored).
+- Full-suite command: `<command or NOT_AVAILABLE>`
+- Focused-case command/filter: `<command syntax or NOT_AVAILABLE>`
+- Browser harness: `<existing Playwright Test configuration and version>`
+- Runtime artifacts produced by the harness: `<paths>`
 
 Existing automated E2E commands may execute cases, but the plan ledger remains the
 source for declared paths, observed outcomes, and evidence.
 
 ## UI and authentication
 
-- Application URL: `http://localhost:5173` (or `WEB_PORT`).
-- Supported browser/device and viewport: Chromium; `desktop` (1280×720) and `mobile` (Pixel 7).
-- Authentication setup: log in through `/login` with a seeded account; the API sets an HTTP-only `sid` cookie. Helper: `login()` in `e2e/fixtures.ts`.
-- Roles/accounts available: `admin` (admin, user ID 1), `alice` (user, ID 2), `bob` (user, ID 3); passwords are in `e2e/fixtures.ts` and `server/seed.ts`.
-- Important user entrypoints: `/login`, `/orders`, `/orders/new`, `/orders/:id`, `/orders/:id/edit`.
+- Application URL: `<URL>`
+- Supported browser/device and viewport: `<value>`
+- Authentication setup: `<fixture account, login flow, or approved session method>`
+- Roles/accounts available: `<non-secret identifiers or fixture creation method>`
+- Important user entrypoints: `<routes or navigation landmarks>`
 
 ## API and state observation
 
-- API base URL: `http://localhost:5173/api` (proxied by Vite to `API_PORT`).
-- Health/readiness endpoint: `GET /api/health`.
-- Request observation method: browser network events or Playwright `APIRequestContext` responses (method, route, status).
-- Correlation/trace lookup: not available; use Playwright trace and run ID.
-- Persisted-state observation: fresh `GET /api/orders/:id` or `GET /api/orders` in an authenticated context, or a UI reload. The server writes every change to `DATA_DIR/db.json` before responding.
-- Forbidden shortcuts: editing `DATA_DIR/db.json` directly; calling `/api/test/reset` to create or change test data (reset is for setup and cleanup only).
+- API base URL: `<URL>`
+- Health/readiness endpoint: `<method and route>`
+- Request observation method: `<browser network, proxy, logs, tracing, etc.>`
+- Correlation/trace lookup: `<method>`
+- Persisted-state observation: `<supported API, UI reload, read-only query, etc.>`
+- Forbidden shortcuts: `<direct writes, internal endpoints, or unsupported probes>`
 
 ## Fixtures and cleanup
 
-- Seed/setup command: `POST /api/test/reset` before each case restores `server/seed.ts` data.
-- Fixture namespace or identifier convention: seeded IDs (users 1–3, orders 1–3); new orders get IDs from 4 upward after a reset.
-- Required baseline data: the seed in `server/seed.ts`.
-- Cleanup command or procedure: `POST /api/test/reset` after each mutating case; report `COMPLETE` only when it returns 204.
-- Isolation/concurrency constraints: one database per `DATA_DIR`; run mutation cases serially (`workers: 1`).
-- Recovery procedure after interruption: `DATA_DIR=.data/e2e npm run db:reset`, or delete `.data/e2e/`.
+- Seed/setup command: `<command or procedure>`
+- Fixture namespace or identifier convention: `<value>`
+- Required baseline data: `<description>`
+- Cleanup command or procedure: `<value>`
+- Isolation/concurrency constraints: `<value>`
+- Recovery procedure after interruption: `<value>`
 
 ## Evidence conventions
 
-- Artifact root: `.runtime-e2e/<plan-slug>/<UTC timestamp>/` (gitignored; local only).
-- Screenshot/recording naming: Playwright defaults inside the bundle's `artifacts/`.
-- Runtime log references: `stdout.log` / `stderr.log` in the bundle.
-- Request evidence: method, route, and status recorded in each case's `runtime-observations`.
-- Retention or redaction rules: fixture data only, no secrets; keep bundles locally, do not upload.
+- Artifact root: `<repository-relative or approved external path>`
+- Screenshot/recording naming: `<pattern>`
+- Runtime log references: `<path plus timestamp/correlation convention>`
+- Request evidence: `<method, route, status, and identifier convention>`
+- Retention or redaction rules: `<rules>`
 
 ## Safety constraints
 
-- Mutations only against the local `DATA_DIR` started by this run.
-- No external side effects exist.
-- Reset the database after every mutating case.
-- Never point `baseURL` or the API at a non-localhost host; stop and ask a human if a config does.
+- `<Data mutation boundaries>`
+- `<Rate, cost, or external side-effect limits>`
+- `<Required cleanup or rollback>`
+- `<Actions requiring explicit human approval>`
 
 ## Preflight
 
@@ -94,22 +94,18 @@ Before setting `Status: READY`, verify:
 - cleanup restores the environment to its baseline;
 - commands use repository-relative paths where practical.
 
-Verified on 2026-10-26: `npm install`, `npm run build`, and `CI=1 npx playwright test` (8/8 passed) on commit `62d7e31`.
-Before a run, make sure ports 5173 and 3001 are free and run with `CI=1` so Playwright starts its own servers instead of reusing a developer server.
-
 ## Known limitations
 
-- No CI pipeline yet; runs are local only.
-- No request correlation IDs.
+- `<Missing tooling, unsupported platform, flaky dependency, or NONE>`
 
 ## Playwright execution and audit
 
-- Project root: repository root.
-- Test/config/helper locations: `e2e/` (shared fixtures in `e2e/fixtures.ts`); runtime plan specs in `e2e/runtime/`.
-- Dependency/browser installation: in Claude Code cloud sessions the SessionStart hook (`.claude/hooks/session-start.sh`) runs `npm install` before the session starts, and Chromium for Playwright is preinstalled (`PLAYWRIGHT_BROWSERS_PATH`). Elsewhere, `npm ci` and `npx playwright install chromium` need human approval; never install implicitly.
-- Native execution command: `["npx", "--no-install", "playwright", "test", "<spec>", "--project=desktop"]`
-- Evidence attachment policy: traces on for browser cases (`test.use({ trace: 'on' })` in the spec); fixture data only.
-- Persistence proof: fresh `GET /api/orders/:id` after a page reload.
+- Project root: `<directory containing the Playwright config>`
+- Test/config/helper locations: `<existing project conventions>`
+- Dependency/browser installation: `<approved command; never install implicitly>`
+- Native execution command: `<argument array ending in Playwright test; no shell operators>`
+- Evidence attachment policy: `<redaction and retention, including traces and screenshots>`
+- Persistence proof: `<fresh API read, read-only DB query, or verified server-backed UI load>`
 
 Use the skill's suite contract and evidence tool described in `playwright-contract.md`.
 Launch a separate browser per invocation rather than attaching to a shared CDP session.
@@ -118,52 +114,12 @@ Tests must emit structured checkpoint observations, not screenshot-only proof.
 ## Base instance
 
 Used when a suite declares `base` to prove that new-behavior tests can fail.
-A suite uses it with `"instance": "project-runtime"`; `evidence.py` reads the JSON below and serves each worktree from it.
+`setup` replaces this section with the proven recipe as a JSON block, which suites read with `"instance": "project-runtime"`.
 
-- Base instance: READY
-- Resources: shared, chosen by the human: worktree instances use the local stack's ports, database, and services, so each runs only while the local stack is stopped
-- Proven refs: 2224054603db603d59f01003c56557a34df6d9c5
-- Shares with the main stack: ports 5173 and 3001, DATA_DIR name .data/e2e (separate files per worktree)
-
-```json
-{
-  "name": "order-desk",
-  "cwd": ".",
-  "resources": "shared",
-  "copy": [],
-  "start": [
-    "npm",
-    "run",
-    "dev"
-  ],
-  "ready": {
-    "url": "http://localhost:{WEB_PORT}/api/health"
-  },
-  "ports": {
-    "WEB_PORT": "5173",
-    "API_PORT": "3001"
-  },
-  "env": {
-    "DATA_DIR": ".data/e2e",
-    "TEST_MODE": "1",
-    "FIXED_NOW": "2026-02-01T08:00:00.000Z"
-  },
-  "setup": [
-    [
-      "npm",
-      "ci",
-      "--prefer-offline",
-      "--no-audit",
-      "--no-fund"
-    ]
-  ],
-  "timeout": 120,
-  "shares": [
-    "ports 5173 and 3001",
-    "DATA_DIR name .data/e2e (separate files per worktree)"
-  ]
-}
-```
+- Base instance: `<READY, or BLOCKED — <ref, or main stack>: <step>: <reason>; written by setup>`
+- Resources: `<shared or isolated, the human's choice at setup>`
+- Proven refs: `<refs served beside the main stack>`
+- Shares with the main stack: `<database, queues, external storage, or nothing>`
 
 ## Existing test suites
 
@@ -171,47 +127,44 @@ Copied into a suite's `existing`; each suite runs on base and head so new failur
 
 | ID | Command (argument array) | Env | JUnit report |
 | --- | --- | --- | --- |
-| `unit` | `["npx", "--no-install", "vitest", "run", "--reporter=junit", "--outputFile={report}"]` | NONE | `--outputFile={report}` |
-| `e2e` | `["npx", "--no-install", "playwright", "test", "--project=desktop", "--reporter=junit"]` | `PLAYWRIGHT_JUNIT_OUTPUT_NAME={report}` | env `PLAYWRIGHT_JUNIT_OUTPUT_NAME` |
+| `<unit>` | `<e.g. ["npx", "vitest", "run", "--reporter=junit", "--outputFile={report}"]>` | `<names and values, or NONE>` | `<how {report} is passed, or NOT_SUPPORTED>` |
+| `<e2e>` | `<e.g. ["npx", "playwright", "test", "--reporter=junit"]>` | `<e.g. PLAYWRIGHT_JUNIT_OUTPUT_NAME={report}>` | `<how {report} is passed, or NOT_SUPPORTED>` |
 
-- No suites: NOT_APPLICABLE; `unit` is `npm test` (Vitest), `e2e` is every spec under `e2e/` on the `desktop` project.
-- Smoke suite: `e2e`; existing suites run on every base comparison, so the smoke suite always runs.
+- No suites: `<why the project has none, or NOT_APPLICABLE>`
+- Smoke suite: `<ID of the existing suite that is the smoke suite, or NONE>`; existing suites run on every base comparison, so the smoke suite always runs.
 
 ## Regression
 
 Copied into a suite's `regression`; `scripts/impact.py` walks the import graph from changed files back to these routes.
 
-- Sources: `["src", "shared"]`
-- Import aliases: NONE (`{}`); imports are relative.
-- Shared surfaces: `["src/styles/**", "src/i18n/**", "src/lib/api.ts", "src/lib/auth.tsx", "shared/**"]`
-- Fan-in threshold: `3`
-- Regression budget: `3`
+- Sources: `<directories with application code, e.g. ["src"]>`
+- Import aliases: `<e.g. {"@/": "src/"}, or NONE>`
+- Shared surfaces: `<globs for global CSS, i18n, store, API client, config, e.g. ["src/styles/**", "src/i18n/**"]>`
+- Fan-in threshold: `<a changed file reaching more key routes than this is shared code, e.g. 3>`
+- Regression budget: `<maximum shared-tier routes tested per run, e.g. 5>`
 
 | Key route | Page file | URL to open in the sweep |
 | --- | --- | --- |
-| `/login` | `src/pages/LoginPage.tsx` | `/login` (logged out) |
-| `/orders` | `src/pages/OrdersPage.tsx` | `/orders` as `admin` |
-| `/orders/new` | `src/pages/OrderFormPage.tsx` | `/orders/new` as `admin` |
-| `/orders/:id` | `src/pages/OrderDetailPage.tsx` | `/orders/1` as `admin` with seed data |
-| `/orders/:id/edit` | `src/pages/OrderFormPage.tsx` | `/orders/1/edit` as `admin` with seed data |
+| `<e.g. /invoices>` | `<e.g. src/pages/InvoicesPage.tsx>` | `<e.g. /invoices>` |
+| `<e.g. /invoices/:id>` | `<e.g. src/pages/InvoicePage.tsx>` | `<e.g. /invoices/1 with seed data>` |
 
 ## Determinism
 
 Copied into a suite's `determinism` so base and head differ only in behavior.
 
-- Time freeze: `FIXED_NOW=2026-02-01T08:00:00.000Z` freezes the server clock (`server/clock.ts`). `playwright.config.ts` already defaults to this value; declare it in `determinism.env` so both instances use it explicitly.
-- Seed data: each instance starts from `server/seed.ts` in its own `DATA_DIR`; `POST /api/test/reset` (requires `TEST_MODE=1`) restores the same seed.
-- Randomness: NOT_SUPPORTED. Session IDs and password salts use `crypto.randomBytes`; they are not observed by API or UI checks.
-- Normalization rules: none needed for seeded or created orders; order IDs are sequential from the seed and timestamps come from `FIXED_NOW`. Add a rule only for a value that differs between two correct instances.
-- Determinism limits: session IDs and password salts are random; the browser clock is not frozen (the client only formats server timestamps).
+- Time freeze: `<variable and value, e.g. FIXED_NOW=2026-01-01T00:00:00Z, or browser-only via page.clock, or NOT_SUPPORTED>`
+- Seed data: `<variable or setup step that loads identical data in every instance, or NOT_SUPPORTED>`
+- Randomness: `<variable that seeds or stubs random values, or NOT_SUPPORTED>`
+- Normalization rules: `<regular expressions for IDs, timestamps, and other per-instance values, with their replacements>`
+- Determinism limits: `<anything above that is NOT_SUPPORTED, stated as a limit>`
 
 ## Parallel execution
 
-- Isolation: serialized; one worker, one `DATA_DIR`.
-- Run marker: not used in data; the run ID is recorded in the bundle.
-- Shared mutation lock: NOT_REQUIRED; each run owns its `DATA_DIR` and its servers.
-- Ports/service ownership: Playwright owns ports 5173/3001 for the run and shuts the servers down.
-- Interrupted-run recovery: reset `.data/e2e` as above.
+- Isolation: `<isolated fixtures/accounts/databases OR serialized>`
+- Run marker: `<use RUNTIME_E2E_RUN_ID in fixture identifiers>`
+- Shared mutation lock: `<project-provided lock procedure or NOT_REQUIRED with reason>`
+- Ports/service ownership: `<assigned ports and which process owns shutdown>`
+- Interrupted-run recovery: `<scoped cleanup for a specific run marker>`
 
 Unknown isolation means serialize mutation runs.
 Browser contexts do not isolate database state or external side effects.
@@ -222,8 +175,8 @@ Never reset a shared database or stop services owned by another run.
 Used by `security-performance-check` for local/dev runtime probes.
 Never put secret values here; name accounts and commands only.
 
-- Allowed hosts: `localhost` and `127.0.0.1` only (head on 5173/3001, base instance on 5273/3101); probes stop on any other host.
-- Test accounts per role: `alice` and `bob` (role `user`; in the seed alice owns orders 1 and 2, bob owns none until he creates one) and `admin` (role `admin`, owns order 3); passwords are in the README seed table.
-- Access-denied fingerprint: another user's order answers `404 {"error":"errors.notFound"}` so IDs do not leak; signed out answers `401 {"error":"errors.unauthenticated"}`; a role-restricted action answers `403 {"error":"errors.forbidden"}`.
-- Data reset command: `POST /api/test/reset` on the instance under test (requires `TEST_MODE=1`, answers 204), or `["npm", "run", "db:reset"]` with that instance's `DATA_DIR`.
-- Probe budget: 30 probe requests or flows per run; stop and report `probes not run: N` when exhausted.
+- Allowed hosts: `<localhost / 127.0.0.1 / declared dev hostnames only; probes stop on any other host>`
+- Test accounts per role: `<two same-role accounts that each own distinct data, plus one higher-privilege account; non-secret identifiers or fixture creation method>`
+- Access-denied fingerprint: `<HTTP status and/or redirect location and/or response text that means "denied" in this app>`
+- Data reset command: `<argument array or procedure that restores baseline data after probes that write>`
+- Probe budget: `<maximum probe requests or flows per run, e.g. 30; stop and report probes not run: N when exhausted>`

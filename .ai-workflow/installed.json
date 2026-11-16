@@ -114,17 +114,17 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/references/playwright-contract.md",
-      "hash": "sha256:081bf5a23c9d244988e1e7445578061cf380e664b0a68fcdfbcd9a56d5e6c658"
+      "hash": "sha256:4a3ac45919978533be09003c16eb00ec12c0388161f3dbcbd6a87b0f3623b0fc"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/references/project-runtime.md",
-      "hash": "sha256:b5df932b1e480d5c0f164b9ccdc9dadce529f1870f0db4e2e206568cc8ab9207"
+      "hash": "sha256:0ee69f638e3660669f74448839048a275a88456a135e6c338827ba4cebd3f4df"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/scripts/evidence.py",
-      "hash": "sha256:7d847f3cb6981e0e28c03fca253f552395c68fd7ae99006c4a5f1533bd4ce645"
+      "hash": "sha256:6089f09056dab8b4848aba06b9d0a8813698faff65d1be2c2204a448d473b705"
     },
     {
       "scope": "repository",
@@ -154,7 +154,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/runtime-e2e-test/SKILL.md",
-      "hash": "sha256:64077c3535115c571196ed8a120b43f4ae2ec55e294b0ed48c5cb3635c80aa58"
+      "hash": "sha256:0b2368eab428052b3700f00353618b9e3cf79dcda0b2bbb77817a3e125997b99"
     },
     {
       "scope": "repository",
@@ -199,17 +199,17 @@
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/references/risk-rules.md",
-      "hash": "sha256:8e6b3f4b570cfb1e5228732e3044cfbf85fe311559ab416c85d8c7ff2ba5883a"
+      "hash": "sha256:784ad6afce34d2f14bb2b1eaecb8847b4d6a4042bfdcaba9b803dfae42fb5268"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/scripts/validate_change.py",
-      "hash": "sha256:4af0b8d58a3725b4d9dda174c3ec021e2d76999c15ae26d3a1ac4d55bf9e6599"
+      "hash": "sha256:9583fa7992effd7f0c890480093dfac6791be9d3e8be567fc5b3691bfb54103a"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/SKILL.md",
-      "hash": "sha256:8b62ed07dfa1f08a89f7d85e011e0cd4763e04d7bc1dd618cc59a7f22f9fce45"
+      "hash": "sha256:f19599dfde5ab829759371a46154d9be9bf1e8132c1d9b99e6747a8c210c7da6"
     },
     {
       "scope": "repository",

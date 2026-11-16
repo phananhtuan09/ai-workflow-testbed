@@ -174,7 +174,7 @@ An inline recipe object is accepted too, for example in a fixture.
 Approval pins the recipe it read; editing it in the reference makes the approval stale, and the bundle keeps the recipe used as `instance.json`.
 
 With `head`, `run` tests no file of the checkout: it creates a head worktree at `head.revision`, and with `"uncommitted": true` (allowed only when `head.revision` is the checkout's `HEAD`) applies the checkout's `git diff --binary HEAD` and copies its untracked files once, keeping the patch as `head.patch`.
-Each worktree, head and base, then gets the approved test files from the snapshot, the recipe's `copy` files from the checkout (for example `.env`, never read), and the recipe's `setup` steps (after `base.setup` on base).
+Each worktree, head and base, then gets the approved test files from the snapshot, the recipe's `copy` files from the checkout (for example `.env`, never read), and the recipe's `setup` steps, run in the recipe `cwd` as `setup.py prove` runs them (after `base.setup`, which runs in the worktree root, on base).
 The tool starts `start` there, waits up to `timeout` seconds for `ready` (`{"url": ...}` answering below 500, or `{"log": <regex>}` in its log), runs the tests and the existing suites, runs `stop` (or terminates the start process group), and records whether the ports were released.
 Head and base run one after the other, and both worktrees are removed afterwards (`worktreeCleanup`).
 A head that cannot be built or never becomes ready stops the run with the reason; a base that never becomes ready degrades the base run with the reason and the log in `base/instance.log`.
@@ -290,6 +290,8 @@ Each suite gets one status:
 
 When the app has no server-side clock control, freeze browser time in the test with `page.clock.setFixedTime()` or `page.clock.install()` and say so in `limits` if server time still varies.
 Read rendered values only after a web-first assertion (for example `await expect(row).toBeVisible()`) has confirmed the data loaded; `innerText()` and `textContent()` do not wait for data and make results timing-dependent.
+The same holds for `count()`, `isVisible()` and `allInnerTexts()`: first wait for the state the value describes, such as the toast or the loaded rows, not only for the page around it, because a heading often renders while the list is still loading.
+An absence check needs the same wait: confirm that a sibling row is visible before counting a button that should be missing, or the count can be 0 only because nothing has loaded yet.
 
 List every executed local dependency in `files`, including helpers, fixture modules, configs, dependency manifests/lockfiles, and approved baselines.
 Use one test per case, titled `[E2E-01] descriptive title`.

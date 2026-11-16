@@ -36,8 +36,8 @@ Read `docs/testing/README.md` before creating, executing, resuming, or auditing 
 Validate the artifact with:
 
 ```bash
-python3 .claude/skills/runtime-e2e-test/validate_test_plan.py <plan.md> --mode plan
-python3 .claude/skills/runtime-e2e-test/validate_test_plan.py <plan.md> --mode completion --bundle <run-dir>
+python3 skills/runtime-e2e-test/validate_test_plan.py <plan.md> --mode plan
+python3 skills/runtime-e2e-test/validate_test_plan.py <plan.md> --mode completion --bundle <run-dir>
 ```
 
 After every run, whatever its outcome, validate the ledger with `--bundle <run-dir>`. It checks `Run ID`, `Tested revisions` and `Last updated` against the recorded run, each case's `Result`, `Can-fail` and `Actual path`, and each existing suite's status against the generated results. Add `--fill` to copy those generated fields (and the run summary counts) from the bundle into the ledger first, instead of typing them; `Observed`, `Evidence`, `Cleanup`, `Path match`, `Status` and the sign-off stay yours to write.
@@ -47,7 +47,7 @@ Runtime adapters rewrite the skill path when installed.
 
 ## Project runtime reference
 
-Before planning or execution, read `.claude/skills/runtime-e2e-test/references/project-runtime.md`.
+Before planning or execution, read `skills/runtime-e2e-test/references/project-runtime.md`.
 It is project-local operational configuration (service commands, readiness signals, environment, variable names, fixtures, evidence locations, cleanup, safety limits), not product authority.
 `Status: READY` means `setup` proved the main stack; `Base instance: READY` means it also served another ref from its own worktree, with the resources the human chose.
 Later runs read that recipe from the reference (`"instance": "project-runtime"`) and never ask the resource question again.
