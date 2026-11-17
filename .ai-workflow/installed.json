@@ -104,7 +104,7 @@
     {
       "scope": "repository",
       "path": ".claude/skills/review-pr/SKILL.md",
-      "hash": "sha256:fc04e1cbc58b15b9bd89c0c8c08a3708d69a604238d8a7586f2be6ad59aa9d4d"
+      "hash": "sha256:b1368137bd764e7d6be64f976d9ffddf795a899fa9b5c3e0c15178a20ef1c577"
     },
     {
       "scope": "repository",
@@ -199,17 +199,17 @@
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/references/risk-rules.md",
-      "hash": "sha256:5315b77dd25fd0f098f351f0fc0fa9a75faefd221905b71f32b61b22b4d26de6"
+      "hash": "sha256:82fa38b41aab85e29482a0f2a89a68ba8a46dc7eaca2dc85ff3ffc442bc0610e"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/scripts/validate_change.py",
-      "hash": "sha256:8160399613966954d870dc0078d83e7ffdfca9e656149ccc75081221b7c90f64"
+      "hash": "sha256:2c3baf75cee0c76bdc73909f9db9e3366d6eb631e8f4040dea427f4636862185"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/SKILL.md",
-      "hash": "sha256:966cf5d0e93b2c34aa94e9b29d0c36fa6158e7e86eef66bcf99ca0f7fbb3a324"
+      "hash": "sha256:afe47d3f591377a34e09d62ad20bbf250a72577515571b577fc65658060d1a95"
     },
     {
       "scope": "repository",
