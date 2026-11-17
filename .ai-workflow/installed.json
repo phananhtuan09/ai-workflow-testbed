@@ -199,17 +199,17 @@
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/references/risk-rules.md",
-      "hash": "sha256:784ad6afce34d2f14bb2b1eaecb8847b4d6a4042bfdcaba9b803dfae42fb5268"
+      "hash": "sha256:5315b77dd25fd0f098f351f0fc0fa9a75faefd221905b71f32b61b22b4d26de6"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/scripts/validate_change.py",
-      "hash": "sha256:9583fa7992effd7f0c890480093dfac6791be9d3e8be567fc5b3691bfb54103a"
+      "hash": "sha256:8160399613966954d870dc0078d83e7ffdfca9e656149ccc75081221b7c90f64"
     },
     {
       "scope": "repository",
       "path": ".claude/skills/validate-change/SKILL.md",
-      "hash": "sha256:f19599dfde5ab829759371a46154d9be9bf1e8132c1d9b99e6747a8c210c7da6"
+      "hash": "sha256:966cf5d0e93b2c34aa94e9b29d0c36fa6158e7e86eef66bcf99ca0f7fbb3a324"
     },
     {
       "scope": "repository",
