@@ -4,7 +4,7 @@ import { EmptyState, ErrorState, LoadingState } from '../components/StateView';
 import { useI18n } from '../i18n';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import { formatDate, formatMoney } from '../lib/format';
+import { formatAge, formatDate, formatMoney } from '../lib/format';
 import { useResource } from '../lib/useResource';
 
 export function OrdersPage() {
@@ -47,7 +47,7 @@ export function OrdersPage() {
                   <td>
                     <span className={`badge badge--${order.status}`}>{t(`orders.status.${order.status}`)}</span>
                   </td>
-                  <td>{formatDate(order.createdAt, locale)}</td>
+                  <td title={formatDate(order.createdAt, locale)}>{formatAge(order.createdAt, locale)}</td>
                 </tr>
               ))}
             </tbody>
