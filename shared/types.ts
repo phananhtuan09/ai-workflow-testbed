@@ -9,6 +9,13 @@ export interface User {
 
 export type OrderStatus = 'draft' | 'confirmed';
 
+export type AccountingStatus = 'sent' | 'failed';
+
+export interface AccountingSync {
+  status: AccountingStatus;
+  attemptedAt: string;
+}
+
 export interface Order {
   id: number;
   ownerId: number;
@@ -17,6 +24,7 @@ export interface Order {
   discountPercent: number;
   status: OrderStatus;
   createdAt: string;
+  accounting?: AccountingSync;
 }
 
 export interface OrderWithOwner extends Order {

@@ -7,4 +7,5 @@ export const config = {
   testMode: process.env.TEST_MODE === '1',
   fixedNow: process.env.FIXED_NOW,
   isProduction: process.env.NODE_ENV === 'production',
+  accountingWebhookUrl: process.env.ACCOUNTING_WEBHOOK_URL ?? '',
 };

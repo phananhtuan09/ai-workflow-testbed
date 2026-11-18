@@ -56,6 +56,27 @@ export function OrderDetailPage() {
         </dd>
         <dt>{t('orders.createdAt')}</dt>
         <dd>{formatDate(data.createdAt, locale)}</dd>
+        {isAdmin && data.accounting && (
+          <>
+            <dt>{t('orders.accounting')}</dt>
+            <dd>
+              {data.accounting.status === 'sent' ? (
+                <span className="badge badge--confirmed">{t('orders.accounting.sent')}</span>
+              ) : (
+                <span className="accounting-warning" role="status">
+                  {t('orders.accounting.failed')}
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => runAction(() => api.resendToAccounting(data.id), order.reload)}
+                  >
+                    {t('orders.accounting.resend')}
+                  </Button>
+                </span>
+              )}
+            </dd>
+          </>
+        )}
       </dl>
       {actionError && (
         <p className="form__error" role="alert">

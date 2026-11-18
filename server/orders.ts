@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { validateOrderInput } from '../shared/order-rules';
 import type { Order, OrderInput, OrderWithOwner } from '../shared/types';
+import { sendToAccounting } from './accounting';
 import { requireAuth, requireRole } from './auth';
 import { now } from './clock';
 import { getDb, saveDb } from './db';
@@ -9,9 +10,11 @@ export const ordersRouter = Router();
 
 ordersRouter.use(requireAuth);
 
-function withOwner(order: Order): OrderWithOwner {
+// Only admins see whether an order reached the accounting system.
+function present(req: Request, order: Order): OrderWithOwner {
   const owner = getDb().users.find((user) => user.id === order.ownerId);
-  return { ...order, ownerName: owner?.displayName ?? '' };
+  const { accounting, ...rest } = order;
+  return { ...rest, ...(req.user!.role === 'admin' && accounting ? { accounting } : {}), ownerName: owner?.displayName ?? '' };
 }
 
 function canAccess(req: Request, order: Order): boolean {
@@ -51,12 +54,12 @@ ordersRouter.get('/', (req, res) => {
   const orders = getDb()
     .orders.filter((order) => canAccess(req, order))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  res.json(orders.map(withOwner));
+  res.json(orders.map((order) => present(req, order)));
 });
 
 ordersRouter.get('/:id', (req, res) => {
   const order = findAccessibleOrder(req, res);
-  if (order) res.json(withOwner(order));
+  if (order) res.json(present(req, order));
 });
 
 ordersRouter.post('/', (req, res) => {
@@ -72,7 +75,7 @@ ordersRouter.post('/', (req, res) => {
   };
   db.orders.push(order);
   saveDb();
-  res.status(201).json(withOwner(order));
+  res.status(201).json(present(req, order));
 });
 
 ordersRouter.put('/:id', (req, res) => {
@@ -86,15 +89,29 @@ ordersRouter.put('/:id', (req, res) => {
   if (!input) return;
   Object.assign(order, input);
   saveDb();
-  res.json(withOwner(order));
+  res.json(present(req, order));
 });
 
-ordersRouter.post('/:id/confirm', requireRole('admin'), (req, res) => {
+ordersRouter.post('/:id/confirm', requireRole('admin'), async (req, res) => {
   const order = findAccessibleOrder(req, res);
   if (!order) return;
   order.status = 'confirmed';
   saveDb();
-  res.json(withOwner(order));
+  order.accounting = await sendToAccounting(order);
+  saveDb();
+  res.json(present(req, order));
+});
+
+ordersRouter.post('/:id/accounting/resend', requireRole('admin'), async (req, res) => {
+  const order = findAccessibleOrder(req, res);
+  if (!order) return;
+  if (order.status !== 'confirmed' || order.accounting?.status === 'sent') {
+    res.status(409).json({ error: 'errors.accountingNotPending' });
+    return;
+  }
+  order.accounting = await sendToAccounting(order);
+  saveDb();
+  res.json(present(req, order));
 });
 
 ordersRouter.delete('/:id', requireRole('admin'), (req, res) => {

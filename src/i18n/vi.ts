@@ -27,6 +27,10 @@ export const vi: Record<MessageKey, string> = {
   'orders.deleteConfirm': 'Xoá đơn hàng này?',
   'orders.back': 'Quay lại danh sách',
   'orders.discountAdminHint': 'Chỉ admin được áp dụng giảm giá.',
+  'orders.accounting': 'Kế toán',
+  'orders.accounting.sent': 'Đã gửi kế toán',
+  'orders.accounting.failed': 'Chưa gửi được sang kế toán',
+  'orders.accounting.resend': 'Gửi lại',
   'form.newTitle': 'Tạo đơn hàng',
   'form.editTitle': 'Sửa đơn hàng',
   'form.save': 'Lưu',
@@ -46,6 +50,7 @@ export const vi: Record<MessageKey, string> = {
   'errors.validation': 'Vui lòng sửa các trường bị lỗi.',
   'errors.discountAdminOnly': 'Chỉ admin được áp dụng giảm giá.',
   'errors.orderLocked': 'Đơn đã xác nhận thì không sửa được.',
+  'errors.accountingNotPending': 'Đơn này không có gì để gửi lại.',
   'errors.network': 'Không kết nối được máy chủ.',
   'errors.unknown': 'Đã có lỗi xảy ra.',
 };

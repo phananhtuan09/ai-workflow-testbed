@@ -38,5 +38,7 @@ export const api = {
   updateOrder: (id: number, input: OrderInput) =>
     request<OrderWithOwner>(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
   confirmOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}/confirm`, { method: 'POST' }),
+  resendToAccounting: (id: number) =>
+    request<OrderWithOwner>(`/orders/${id}/accounting/resend`, { method: 'POST' }),
   deleteOrder: (id: number) => request<void>(`/orders/${id}`, { method: 'DELETE' }),
 };
