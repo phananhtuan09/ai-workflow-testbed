@@ -15,6 +15,7 @@ export const en = {
   'orders.price': 'Price',
   'orders.discount': 'Discount (%)',
   'orders.total': 'Total',
+  'orders.savings': 'You save',
   'orders.status': 'Status',
   'orders.createdAt': 'Created',
   'orders.status.draft': 'Draft',
