@@ -21,6 +21,11 @@ export function OrdersPage() {
           {t('orders.new')}
         </Link>
       </div>
+      {orders.status === 'success' && orders.data.length > 0 && (
+        <p className="page-count">
+          {t(orders.data.length === 1 ? 'orders.countOne' : 'orders.countMany').replace('{count}', String(orders.data.length))}
+        </p>
+      )}
       {orders.status === 'loading' && <LoadingState />}
       {orders.status === 'error' && <ErrorState error={orders.error} onRetry={orders.reload} />}
       {orders.status === 'success' && orders.data.length === 0 && <EmptyState message={t('orders.empty')} />}
