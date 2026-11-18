@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { orderTotalCents } from '../../shared/order-rules';
+import { itemSubtotalCents, MAX_QUANTITY, orderTotalCents } from '../../shared/order-rules';
 import { Button } from '../components/Button';
 import { ErrorState, LoadingState } from '../components/StateView';
 import { useI18n } from '../i18n';
@@ -37,6 +37,9 @@ export function OrderDetailPage() {
   if (order.status === 'error') return <ErrorState error={order.error} onRetry={order.reload} />;
 
   const { data } = order;
+  const canChangeItems = data.status === 'draft';
+  // Largest lines first so the main cost of the order is on top.
+  const items = [...data.items].sort((a, b) => itemSubtotalCents(b) - itemSubtotalCents(a));
   return (
     <article className="card">
       <Link to="/orders">{t('orders.back')}</Link>
@@ -57,6 +60,53 @@ export function OrderDetailPage() {
         <dt>{t('orders.createdAt')}</dt>
         <dd>{formatDate(data.createdAt, locale)}</dd>
       </dl>
+      <h2 className="section-title">{t('items.title')}</h2>
+      <div className="table-wrap">
+        <table className="table" data-testid="order-items">
+          <thead>
+            <tr>
+              <th>{t('items.product')}</th>
+              <th className="table__number">{t('items.quantity')}</th>
+              <th className="table__number">{t('items.unitPrice')}</th>
+              <th className="table__number">{t('items.lineTotal')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr key={item.id}>
+                <td>{item.name}</td>
+                <td className="table__number">
+                  {canChangeItems ? (
+                    <span className="stepper">
+                      <Button
+                        variant="secondary"
+                        aria-label={t('items.decrease')}
+                        disabled={busy || item.quantity <= 1}
+                        onClick={() => runAction(() => api.updateItemQuantity(data.id, item.id, item.quantity - 1), order.reload)}
+                      >
+                        −
+                      </Button>
+                      <span data-testid="item-quantity">{item.quantity}</span>
+                      <Button
+                        variant="secondary"
+                        aria-label={t('items.increase')}
+                        disabled={busy || item.quantity >= MAX_QUANTITY}
+                        onClick={() => runAction(() => api.updateItemQuantity(data.id, item.id, item.quantity + 1), order.reload)}
+                      >
+                        +
+                      </Button>
+                    </span>
+                  ) : (
+                    item.quantity
+                  )}
+                </td>
+                <td className="table__number">{formatMoney(item.unitPriceCents, locale)}</td>
+                <td className="table__number">{formatMoney(itemSubtotalCents(item), locale)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {actionError && (
         <p className="form__error" role="alert">
           {t(actionError)}

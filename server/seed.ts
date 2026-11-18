@@ -7,6 +7,7 @@ export interface StoredUser extends User {
 
 export interface Database {
   nextOrderId: number;
+  nextItemId: number;
   users: StoredUser[];
   orders: Order[];
 }
@@ -15,6 +16,7 @@ export interface Database {
 export function seedDatabase(): Database {
   return {
     nextOrderId: 4,
+    nextItemId: 6,
     users: [
       { id: 1, username: 'admin', displayName: 'Ada Admin', role: 'admin', passwordHash: hashPassword('admin123') },
       { id: 2, username: 'alice', displayName: 'Alice User', role: 'user', passwordHash: hashPassword('alice123') },
@@ -29,6 +31,10 @@ export function seedDatabase(): Database {
         discountPercent: 0,
         status: 'confirmed',
         createdAt: '2026-01-05T09:00:00.000Z',
+        items: [
+          { id: 1, name: 'Desk mat', quantity: 2, unitPriceCents: 3_500 },
+          { id: 2, name: 'Standing desk frame', quantity: 1, unitPriceCents: 38_000 },
+        ],
       },
       {
         id: 2,
@@ -38,6 +44,7 @@ export function seedDatabase(): Database {
         discountPercent: 10,
         status: 'draft',
         createdAt: '2026-01-06T10:30:00.000Z',
+        items: [{ id: 3, name: 'Monitor arm', quantity: 1, unitPriceCents: 8_900 }],
       },
       {
         id: 3,
@@ -47,6 +54,10 @@ export function seedDatabase(): Database {
         discountPercent: 20,
         status: 'draft',
         createdAt: '2026-01-07T14:15:00.000Z',
+        items: [
+          { id: 4, name: 'Office chair', quantity: 1, unitPriceCents: 29_000 },
+          { id: 5, name: 'Lumbar cushion', quantity: 2, unitPriceCents: 1_500 },
+        ],
       },
     ],
   };

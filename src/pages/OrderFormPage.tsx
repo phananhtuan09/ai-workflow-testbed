@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { MAX_DISCOUNT_PERCENT, MAX_NAME_LENGTH, validateOrderInput, type OrderFieldErrors } from '../../shared/order-rules';
 import type { OrderInput } from '../../shared/types';
 import { Button } from '../components/Button';
+import { newItem, OrderItemsEditor, type ItemValues } from '../components/OrderItemsEditor';
 import { ErrorState, LoadingState } from '../components/StateView';
 import { TextField } from '../components/TextField';
 import { useI18n } from '../i18n';
@@ -14,17 +15,23 @@ import { useResource } from '../lib/useResource';
 
 interface FormValues {
   name: string;
-  price: string;
   discount: string;
+  items: ItemValues[];
 }
 
-const emptyValues: FormValues = { name: '', price: '', discount: '0' };
+function emptyValues(): FormValues {
+  return { name: '', discount: '0', items: [newItem()] };
+}
 
 function toInput(values: FormValues): OrderInput {
   return {
     name: values.name,
-    priceCents: parseMoneyToCents(values.price),
     discountPercent: Number(values.discount),
+    items: values.items.map((item) => ({
+      name: item.name,
+      quantity: Number(item.quantity),
+      unitPriceCents: parseMoneyToCents(item.unitPrice),
+    })),
   };
 }
 
@@ -40,10 +47,16 @@ export function OrderFormPage() {
   const initial: FormValues = existing.data
     ? {
         name: existing.data.name,
-        price: (existing.data.priceCents / 100).toFixed(2),
         discount: String(existing.data.discountPercent),
+        items: existing.data.items.map((item) =>
+          newItem({
+            name: item.name,
+            quantity: String(item.quantity),
+            unitPrice: (item.unitPriceCents / 100).toFixed(2),
+          }),
+        ),
       }
-    : emptyValues;
+    : emptyValues();
 
   return <OrderForm key={orderId ?? 'new'} orderId={orderId} initial={initial} />;
 }
@@ -58,7 +71,7 @@ function OrderForm({ orderId, initial }: { orderId?: number; initial: FormValues
   const [saving, setSaving] = useState(false);
   const isAdmin = user?.role === 'admin';
 
-  function update(field: keyof FormValues, value: string) {
+  function update(field: 'name' | 'discount', value: string) {
     setValues((current) => ({ ...current, [field]: value }));
   }
 
@@ -93,13 +106,6 @@ function OrderForm({ orderId, initial }: { orderId?: number; initial: FormValues
         error={fieldErrors.name && t(fieldErrors.name)}
       />
       <TextField
-        label={t('orders.price')}
-        inputMode="decimal"
-        value={values.price}
-        onChange={(event) => update('price', event.target.value)}
-        error={fieldErrors.priceCents && t(fieldErrors.priceCents)}
-      />
-      <TextField
         label={t('orders.discount')}
         type="number"
         min={0}
@@ -109,6 +115,11 @@ function OrderForm({ orderId, initial }: { orderId?: number; initial: FormValues
         hint={isAdmin ? undefined : t('orders.discountAdminHint')}
         onChange={(event) => update('discount', event.target.value)}
         error={fieldErrors.discountPercent && t(fieldErrors.discountPercent)}
+      />
+      <OrderItemsEditor
+        items={values.items}
+        errors={fieldErrors}
+        onChange={(items) => setValues((current) => ({ ...current, items }))}
       />
       {formError && (
         <p className="form__error" role="alert">
