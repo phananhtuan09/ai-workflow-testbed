@@ -1,4 +1,4 @@
-import type { ApiErrorBody, OrderInput, OrderWithOwner, User } from '../../shared/types';
+import type { ApiErrorBody, OrderInput, OrderView, OrderWithOwner, User } from '../../shared/types';
 
 export class ApiError extends Error {
   constructor(
@@ -31,7 +31,7 @@ export const api = {
     request<User>('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   logout: () => request<void>('/auth/logout', { method: 'POST' }),
   me: () => request<User>('/auth/me'),
-  listOrders: () => request<OrderWithOwner[]>('/orders'),
+  listOrders: (show: OrderView = 'active') => request<OrderWithOwner[]>(`/orders?show=${show}`),
   getOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}`),
   createOrder: (input: OrderInput) =>
     request<OrderWithOwner>('/orders', { method: 'POST', body: JSON.stringify(input) }),
@@ -39,4 +39,6 @@ export const api = {
     request<OrderWithOwner>(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
   confirmOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}/confirm`, { method: 'POST' }),
   deleteOrder: (id: number) => request<void>(`/orders/${id}`, { method: 'DELETE' }),
+  archiveOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}/archive`, { method: 'POST' }),
+  restoreOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}/restore`, { method: 'POST' }),
 };

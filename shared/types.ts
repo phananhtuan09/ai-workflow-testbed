@@ -17,11 +17,14 @@ export interface Order {
   discountPercent: number;
   status: OrderStatus;
   createdAt: string;
+  archived?: boolean;
 }
 
 export interface OrderWithOwner extends Order {
   ownerName: string;
 }
+
+export type OrderView = 'active' | 'archived' | 'all';
 
 export interface OrderInput {
   name: string;
