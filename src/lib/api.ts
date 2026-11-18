@@ -38,5 +38,6 @@ export const api = {
   updateOrder: (id: number, input: OrderInput) =>
     request<OrderWithOwner>(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
   confirmOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}/confirm`, { method: 'POST' }),
+  cancelOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}/cancel`, { method: 'POST' }),
   deleteOrder: (id: number) => request<void>(`/orders/${id}`, { method: 'DELETE' }),
 };
