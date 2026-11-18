@@ -18,6 +18,7 @@ export function OrderDetailPage() {
   const order = useResource(useCallback(() => api.getOrder(id), [id]));
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const isAdmin = user?.role === 'admin';
 
   async function runAction(action: () => Promise<unknown>, after: () => void) {
@@ -31,6 +32,12 @@ export function OrderDetailPage() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function copyLink() {
+    await navigator.clipboard.writeText(window.location.href);
+    setLinkCopied(true);
+    window.setTimeout(() => setLinkCopied(false), 2000);
   }
 
   if (order.status === 'loading') return <LoadingState />;
@@ -85,6 +92,14 @@ export function OrderDetailPage() {
           >
             {t('orders.delete')}
           </Button>
+        )}
+        <Button variant="secondary" onClick={() => void copyLink()}>
+          {t('orders.copyLink')}
+        </Button>
+        {linkCopied && (
+          <span className="actions__note" role="status">
+            {t('orders.linkCopied')}
+          </span>
         )}
       </div>
     </article>
