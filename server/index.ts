@@ -1,9 +1,12 @@
 import path from 'node:path';
 import express from 'express';
+import { activityRouter } from './activity';
 import { authRouter, clearSessions, loadUser } from './auth';
 import { config } from './config';
 import { resetDb } from './db';
+import { sendError } from './errors';
 import { ordersRouter } from './orders';
+import { usersRouter } from './users';
 
 const app = express();
 
@@ -15,6 +18,8 @@ app.get('/api/health', (_req, res) => {
 });
 app.use('/api/auth', authRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/activity', activityRouter);
+app.use('/api/users', usersRouter);
 
 if (config.testMode) {
   app.post('/api/test/reset', (_req, res) => {
@@ -25,7 +30,7 @@ if (config.testMode) {
 }
 
 app.use('/api', (_req, res) => {
-  res.status(404).json({ error: 'errors.notFound' });
+  sendError(res, 404, 'errors.notFound');
 });
 
 if (config.isProduction) {

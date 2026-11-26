@@ -29,6 +29,22 @@ export interface OrderInput {
   discountPercent: number;
 }
 
+export type ActivityAction = 'created' | 'edited' | 'confirmed' | 'deleted';
+
+export interface ActivityEvent {
+  id: number;
+  orderId: number;
+  // Kept on the event so the history still reads after the order is deleted.
+  orderName: string;
+  actorId: number;
+  action: ActivityAction;
+  at: string;
+}
+
+export interface ActivityEventWithActor extends ActivityEvent {
+  actorName: string;
+}
+
 export interface ApiErrorBody {
   error: string;
   fields?: Partial<Record<keyof OrderInput, string>>;

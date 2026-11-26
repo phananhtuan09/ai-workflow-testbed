@@ -11,6 +11,8 @@ This repository is used to try [ai-agent-workflow](https://github.com/phananhtua
 - Create and edit orders with a name (max 100 characters), a price, and a discount (0–50%, admins only).
 - Order detail with total price; admins can confirm or delete an order.
   Confirmed orders can no longer be edited.
+- Every create, edit, confirm, and delete is recorded; the order detail page shows the order's history, newest first.
+  Admins have an Activity page with every event and a filter by user.
 - English and Vietnamese UI; every UI string goes through `src/i18n/`.
 
 | Username | Password | Role |
@@ -72,7 +74,7 @@ API_PORT=3201 WEB_PORT=5373 DATA_DIR=.data/head TEST_MODE=1 npm run dev
 ## Project layout
 
 ```
-server/            Express API: auth, orders, JSON database, seed data
+server/            Express API: auth, orders, activity, JSON database, seed data
 shared/            Types and order rules used by both server and client
 src/components/    Shared UI: Button, TextField, StateView, Layout
 src/pages/         Login, orders list, order detail, order form
@@ -85,6 +87,7 @@ e2e/               Playwright tests and fixtures
 ## Conventions
 
 - Load server data in components with `useResource` (`src/lib/useResource.ts`) and the `api` client (`src/lib/api.ts`).
+- Send API errors with `sendError` (`server/errors.ts`) so every error body has the same shape.
 - Order rules live in `shared/order-rules.ts` and are enforced on both client and server.
   The server is the authority for permissions.
 - Colors and spacing come from the CSS variables in `src/styles/global.css`.

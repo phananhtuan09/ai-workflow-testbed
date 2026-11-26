@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { orderTotalCents } from '../../shared/order-rules';
+import { ActivityList } from '../components/ActivityList';
 import { Button } from '../components/Button';
 import { ErrorState, LoadingState } from '../components/StateView';
 import { useI18n } from '../i18n';
@@ -16,6 +17,7 @@ export function OrderDetailPage() {
   const navigate = useNavigate();
   const id = Number(useParams().id);
   const order = useResource(useCallback(() => api.getOrder(id), [id]));
+  const activity = useResource(useCallback(() => api.getOrderActivity(id), [id]));
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin';
@@ -69,7 +71,18 @@ export function OrderDetailPage() {
           </Link>
         )}
         {isAdmin && data.status === 'draft' && (
-          <Button disabled={busy} onClick={() => runAction(() => api.confirmOrder(data.id), order.reload)}>
+          <Button
+            disabled={busy}
+            onClick={() =>
+              runAction(
+                () => api.confirmOrder(data.id),
+                () => {
+                  order.reload();
+                  activity.reload();
+                },
+              )
+            }
+          >
             {t('orders.confirm')}
           </Button>
         )}
@@ -87,6 +100,12 @@ export function OrderDetailPage() {
           </Button>
         )}
       </div>
+      <section className="history">
+        <h2>{t('activity.history')}</h2>
+        {activity.status === 'loading' && <LoadingState />}
+        {activity.status === 'error' && <ErrorState error={activity.error} onRetry={activity.reload} />}
+        {activity.status === 'success' && <ActivityList events={activity.data} />}
+      </section>
     </article>
   );
 }

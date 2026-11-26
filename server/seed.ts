@@ -1,4 +1,4 @@
-import type { Order, User } from '../shared/types';
+import type { ActivityEvent, Order, User } from '../shared/types';
 import { hashPassword } from './passwords';
 
 export interface StoredUser extends User {
@@ -7,14 +7,17 @@ export interface StoredUser extends User {
 
 export interface Database {
   nextOrderId: number;
+  nextActivityId: number;
   users: StoredUser[];
   orders: Order[];
+  activity: ActivityEvent[];
 }
 
 // Fixed IDs and timestamps keep runs comparable across revisions.
 export function seedDatabase(): Database {
   return {
     nextOrderId: 4,
+    nextActivityId: 5,
     users: [
       { id: 1, username: 'admin', displayName: 'Ada Admin', role: 'admin', passwordHash: hashPassword('admin123') },
       { id: 2, username: 'alice', displayName: 'Alice User', role: 'user', passwordHash: hashPassword('alice123') },
@@ -48,6 +51,12 @@ export function seedDatabase(): Database {
         status: 'draft',
         createdAt: '2026-01-07T14:15:00.000Z',
       },
+    ],
+    activity: [
+      { id: 1, orderId: 1, orderName: 'Standing desk', actorId: 2, action: 'created', at: '2026-01-05T09:00:00.000Z' },
+      { id: 2, orderId: 1, orderName: 'Standing desk', actorId: 1, action: 'confirmed', at: '2026-01-05T11:20:00.000Z' },
+      { id: 3, orderId: 2, orderName: 'Monitor arm', actorId: 2, action: 'created', at: '2026-01-06T10:30:00.000Z' },
+      { id: 4, orderId: 3, orderName: 'Office chair', actorId: 1, action: 'created', at: '2026-01-07T14:15:00.000Z' },
     ],
   };
 }
