@@ -3,6 +3,7 @@ import express from 'express';
 import { authRouter, clearSessions, loadUser } from './auth';
 import { config } from './config';
 import { resetDb } from './db';
+import { notesRouter } from './notes';
 import { ordersRouter } from './orders';
 
 const app = express();
@@ -14,6 +15,7 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 app.use('/api/auth', authRouter);
+app.use('/api/orders/:id/notes', notesRouter);
 app.use('/api/orders', ordersRouter);
 
 if (config.testMode) {

@@ -29,7 +29,19 @@ export interface OrderInput {
   discountPercent: number;
 }
 
+export interface OrderNote {
+  id: number;
+  orderId: number;
+  authorId: number;
+  body: string;
+  createdAt: string;
+}
+
+export interface OrderNoteWithAuthor extends OrderNote {
+  author?: User;
+}
+
 export interface ApiErrorBody {
   error: string;
-  fields?: Partial<Record<keyof OrderInput, string>>;
+  fields?: Partial<Record<keyof OrderInput | 'body', string>>;
 }

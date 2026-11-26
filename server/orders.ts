@@ -19,7 +19,7 @@ function canAccess(req: Request, order: Order): boolean {
 }
 
 // Responds 404 for both missing and inaccessible orders so IDs do not leak.
-function findAccessibleOrder(req: Request, res: Response): Order | undefined {
+export function findAccessibleOrder(req: Request, res: Response): Order | undefined {
   const order = getDb().orders.find((candidate) => candidate.id === Number(req.params.id));
   if (!order || !canAccess(req, order)) {
     res.status(404).json({ error: 'errors.notFound' });

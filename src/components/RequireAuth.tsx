@@ -6,6 +6,9 @@ export function RequireAuth() {
   const { user, ready } = useAuth();
   const location = useLocation();
   if (!ready) return <LoadingState />;
-  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  if (!user) {
+    const next = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?next=${next}`} replace />;
+  }
   return <Outlet />;
 }

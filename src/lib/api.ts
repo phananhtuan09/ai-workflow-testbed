@@ -1,4 +1,4 @@
-import type { ApiErrorBody, OrderInput, OrderWithOwner, User } from '../../shared/types';
+import type { ApiErrorBody, OrderInput, OrderNoteWithAuthor, OrderWithOwner, User } from '../../shared/types';
 
 export class ApiError extends Error {
   constructor(
@@ -39,4 +39,9 @@ export const api = {
     request<OrderWithOwner>(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
   confirmOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}/confirm`, { method: 'POST' }),
   deleteOrder: (id: number) => request<void>(`/orders/${id}`, { method: 'DELETE' }),
+  listNotes: (orderId: number) => request<OrderNoteWithAuthor[]>(`/orders/${orderId}/notes`),
+  addNote: (orderId: number, body: string) =>
+    request<OrderNoteWithAuthor>(`/orders/${orderId}/notes`, { method: 'POST', body: JSON.stringify({ body }) }),
+  deleteNote: (orderId: number, noteId: number) =>
+    request<void>(`/orders/${orderId}/notes/${noteId}`, { method: 'DELETE' }),
 };

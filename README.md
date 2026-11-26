@@ -11,6 +11,9 @@ This repository is used to try [ai-agent-workflow](https://github.com/phananhtua
 - Create and edit orders with a name (max 100 characters), a price, and a discount (0–50%, admins only).
 - Order detail with total price; admins can confirm or delete an order.
   Confirmed orders can no longer be edited.
+- Order notes: the owner and admins add notes (max 500 characters, `**bold**` and line breaks) on the detail page, which refreshes them every 10 seconds; the list shows how many notes each order has.
+  Authors and admins can delete a note.
+- Signing in returns to the page that was opened (`/login?next=...`).
 - English and Vietnamese UI; every UI string goes through `src/i18n/`.
 
 | Username | Password | Role |
@@ -58,7 +61,7 @@ Install the Playwright browser once with `npx playwright install chromium` if it
 | Data | `DATA_DIR/db.json` (default `.data/`), created from `server/seed.ts` on first start |
 | Reset data | `npm run db:reset`, or `POST /api/test/reset` when `TEST_MODE=1` |
 | Frozen clock | `FIXED_NOW=<ISO timestamp>` fixes the server time for new orders |
-| Seed identity | Fixed user IDs 1–3, order IDs 1–3, fixed timestamps |
+| Seed identity | Fixed user IDs 1–3, order IDs 1–3, note IDs 1–3, fixed timestamps |
 
 To run two copies side by side (for example two revisions in separate worktrees), give each its own ports and data directory:
 
