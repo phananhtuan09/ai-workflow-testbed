@@ -29,6 +29,12 @@ export interface OrderInput {
   discountPercent: number;
 }
 
+export interface SpendingSummary {
+  totalSpentCents: number;
+  orderCount: number;
+  averageDiscountPercent: number;
+}
+
 export interface ApiErrorBody {
   error: string;
   fields?: Partial<Record<keyof OrderInput, string>>;
