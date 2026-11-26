@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import type { Role, User } from '../shared/types';
 import { getDb } from './db';
+import { sendError } from './errors';
 import { verifyPassword } from './passwords';
 
 const SESSION_COOKIE = 'sid';
@@ -35,19 +36,13 @@ export function loadUser(req: Request, _res: Response, next: NextFunction): void
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
-  if (!req.user) {
-    res.status(401).json({ error: 'errors.unauthenticated' });
-    return;
-  }
+  if (!req.user) return sendError(res, 401, 'errors.unauthenticated');
   next();
 }
 
 export function requireRole(role: Role) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (req.user?.role !== role) {
-      res.status(403).json({ error: 'errors.forbidden' });
-      return;
-    }
+    if (req.user?.role !== role) sendError(res, 403, 'errors.forbidden');
     next();
   };
 }
@@ -62,8 +57,7 @@ authRouter.post('/login', (req, res) => {
   const { username, password } = req.body as { username?: string; password?: string };
   const user = getDb().users.find((candidate) => candidate.username === username);
   if (!user || !password || !verifyPassword(password, user.passwordHash)) {
-    res.status(401).json({ error: 'errors.invalidCredentials' });
-    return;
+    return sendError(res, 401, 'errors.invalidCredentials');
   }
   const sessionId = randomBytes(24).toString('hex');
   sessions.set(sessionId, user.id);

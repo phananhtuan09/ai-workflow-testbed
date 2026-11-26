@@ -13,7 +13,12 @@ function load(): Database {
     persist(seeded);
     return seeded;
   }
-  return JSON.parse(fs.readFileSync(dbFile, 'utf8')) as Database;
+  return upgrade(JSON.parse(fs.readFileSync(dbFile, 'utf8')) as Partial<Database> & Omit<Database, 'activity' | 'nextActivityId'>);
+}
+
+// Data files written before activity history have no events; history starts empty for them.
+function upgrade(data: Partial<Database> & Omit<Database, 'activity' | 'nextActivityId'>): Database {
+  return { ...data, activity: data.activity ?? [], nextActivityId: data.nextActivityId ?? 1 };
 }
 
 function persist(data: Database): void {

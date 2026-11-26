@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatMoney, parseMoneyToCents } from './format';
+import { formatDate, formatDateTime, formatMoney, parseMoneyToCents } from './format';
 
 describe('formatMoney', () => {
   it('formats cents as US dollars', () => {
@@ -10,6 +10,12 @@ describe('formatMoney', () => {
 describe('formatDate', () => {
   it('formats in UTC so output does not depend on the machine time zone', () => {
     expect(formatDate('2026-01-05T23:30:00.000Z', 'en')).toBe('Jan 5, 2026');
+  });
+});
+
+describe('formatDateTime', () => {
+  it('shows date and time in UTC', () => {
+    expect(formatDateTime('2026-01-05T09:00:00.000Z', 'en')).toBe('Jan 5, 2026, 9:00 AM');
   });
 });
 

@@ -1,4 +1,4 @@
-import type { ApiErrorBody, OrderInput, OrderWithOwner, User } from '../../shared/types';
+import type { ActivityEventWithActor, ApiErrorBody, OrderInput, OrderWithOwner, User } from '../../shared/types';
 
 export class ApiError extends Error {
   constructor(
@@ -39,4 +39,8 @@ export const api = {
     request<OrderWithOwner>(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
   confirmOrder: (id: number) => request<OrderWithOwner>(`/orders/${id}/confirm`, { method: 'POST' }),
   deleteOrder: (id: number) => request<void>(`/orders/${id}`, { method: 'DELETE' }),
+  getOrderActivity: (id: number) => request<ActivityEventWithActor[]>(`/orders/${id}/activity`),
+  listActivity: (userId?: number) =>
+    request<ActivityEventWithActor[]>(userId === undefined ? '/activity' : `/activity?user=${userId}`),
+  listUsers: () => request<User[]>('/users'),
 };

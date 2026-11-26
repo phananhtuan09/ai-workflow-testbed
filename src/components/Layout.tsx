@@ -21,6 +21,7 @@ export function Layout() {
         </Link>
         <nav className="layout__nav">
           {user && <Link to="/orders">{t('nav.orders')}</Link>}
+          {user?.role === 'admin' && <Link to="/activity">{t('nav.activity')}</Link>}
           <Button variant="secondary" onClick={() => setLocale(locale === 'en' ? 'vi' : 'en')}>
             {t('nav.language')}
           </Button>
