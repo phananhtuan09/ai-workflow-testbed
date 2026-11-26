@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { orderTotalCents } from '../../shared/order-rules';
 import { EmptyState, ErrorState, LoadingState } from '../components/StateView';
+import { SummaryCard } from '../components/SummaryCard';
 import { useI18n } from '../i18n';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -21,6 +22,7 @@ export function OrdersPage() {
           {t('orders.new')}
         </Link>
       </div>
+      {orders.status !== 'loading' && <SummaryCard />}
       {orders.status === 'loading' && <LoadingState />}
       {orders.status === 'error' && <ErrorState error={orders.error} onRetry={orders.reload} />}
       {orders.status === 'success' && orders.data.length === 0 && <EmptyState message={t('orders.empty')} />}

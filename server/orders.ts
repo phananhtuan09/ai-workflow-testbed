@@ -4,6 +4,7 @@ import type { Order, OrderInput, OrderWithOwner } from '../shared/types';
 import { requireAuth, requireRole } from './auth';
 import { now } from './clock';
 import { getDb, saveDb } from './db';
+import { summarize } from '../shared/summary';
 
 export const ordersRouter = Router();
 
@@ -52,6 +53,11 @@ ordersRouter.get('/', (req, res) => {
     .orders.filter((order) => canAccess(req, order))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   res.json(orders.map(withOwner));
+});
+
+// Before /:id so "summary" is not read as an order id.
+ordersRouter.get('/summary', (req, res) => {
+  res.json(summarize(getDb().orders.filter((order) => canAccess(req, order))));
 });
 
 ordersRouter.get('/:id', (req, res) => {
